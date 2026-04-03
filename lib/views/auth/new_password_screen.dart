@@ -58,7 +58,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                             child: const Icon(
                               Icons.camera_alt_outlined,
                               color: AppColor.secondary,
-                              size: 30,
+                              size: 32,
                             ),
                           ),
                         ),
@@ -96,7 +96,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Color(0x1A1D4ED8),
-                                    blurRadius: 18,
+                                    blurRadius: 20,
                                     offset: Offset(0, 8),
                                   ),
                                 ],
@@ -108,7 +108,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                     'Atur password baru',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 22,
+                                      fontSize: 24,
                                       fontWeight: FontWeight.w800,
                                       color: AppColor.textPrimary,
                                     ),
@@ -118,7 +118,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                     'Gunakan kombinasi password yang kuat dan aman.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 16,
                                       color: AppColor.textSecondary,
                                     ),
                                   ),
@@ -152,7 +152,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 18),
+                                  const SizedBox(height: 20),
                                   CustomButton(
                                     text: 'Simpan Password',
                                     onPressed: () {},

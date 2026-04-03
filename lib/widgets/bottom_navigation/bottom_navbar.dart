@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/views/home/home_screen.dart';
+import 'package:presenzo_app/views/presensi/attendance_screen.dart';
 import 'package:presenzo_app/views/profile/profile_screen.dart';
 
 class BottomNavbar extends StatefulWidget {
@@ -15,7 +16,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
 
   late final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
-    const _AttendanceScreen(),
+    const AttendanceScreen(),
     const _HistoryScreen(),
     const ProfileScreen(),
   ];
@@ -80,19 +81,6 @@ class _BottomNavbarState extends State<BottomNavbar> {
   }
 }
 
-class _AttendanceScreen extends StatelessWidget {
-  const _AttendanceScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return _TabPlaceholder(
-      title: 'Presensi',
-      description: 'Halaman check in dan check out akan ditaruh di sini.',
-      icon: Icons.fingerprint,
-    );
-  }
-}
-
 class _HistoryScreen extends StatelessWidget {
   const _HistoryScreen();
 
@@ -126,7 +114,7 @@ class _TabPlaceholder extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
                 color: AppColor.primarySoft,
                 shape: BoxShape.circle,
@@ -147,7 +135,7 @@ class _TabPlaceholder extends StatelessWidget {
               description,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 height: 1.5,
                 color: AppColor.textSecondary,
               ),

@@ -36,8 +36,8 @@ class CustomButton extends StatelessWidget {
 
     final buttonChild = isLoading
         ? SizedBox(
-            width: 18,
-            height: 18,
+            width: 20,
+            height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: loadingColor ?? resolvedTextColor,
@@ -55,7 +55,7 @@ class CustomButton extends StatelessWidget {
                 text,
                 style: TextStyle(
                   color: resolvedTextColor,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),

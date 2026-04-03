@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: const Icon(
                                 Icons.camera_alt_outlined,
                                 color: AppColor.secondary,
-                                size: 30,
+                                size: 32,
                               ),
                             ),
                           ),
@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   boxShadow: const [
                                     BoxShadow(
                                       color: Color(0x1A1D4ED8),
-                                      blurRadius: 18,
+                                      blurRadius: 20,
                                       offset: Offset(0, 8),
                                     ),
                                   ],
@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       'Masuk ke akun Anda',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 22,
+                                        fontSize: 24,
                                         fontWeight: FontWeight.w800,
                                         color: AppColor.textPrimary,
                                       ),
@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       'Gunakan email terdaftar untuk melanjutkan.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 16,
                                         color: AppColor.textSecondary,
                                       ),
                                     ),
@@ -221,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             'Lupa kata sandi?',
                                             style: TextStyle(
                                               color: AppColor.primary,
-                                              fontSize: 13,
+                                              fontSize: 12,
                                               fontWeight: FontWeight.w700,
                                             ),
                                           ),
@@ -305,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'Belum punya akun? ',
                                 style: TextStyle(
                                   color: AppColor.textSecondary,
-                                  fontSize: 14,
+                                  fontSize: 16,
                                 ),
                               ),
                               GestureDetector(

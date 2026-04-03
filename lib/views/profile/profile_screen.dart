@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               backgroundColor: AppColor.primarySoft,
                               child: Icon(
                                 Icons.person,
-                                size: 34,
+                                size: 32,
                                 color: AppColor.primary,
                               ),
                             ),
@@ -161,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         boxShadow: const [
                           BoxShadow(
                             color: Color(0x120F172A),
-                            blurRadius: 18,
+                            blurRadius: 20,
                             offset: Offset(0, 8),
                           ),
                         ],
@@ -173,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Edit Profil',
                             style: TextStyle(
                               color: AppColor.textPrimary,
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -182,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Perbarui profil Anda.',
                             style: TextStyle(
                               color: AppColor.textSecondary,
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -215,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 20),
                           CustomButton(
                             text: 'Simpan Perubahan',
                             isLoading: _isSaving,

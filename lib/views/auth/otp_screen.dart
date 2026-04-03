@@ -45,7 +45,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             child: const Icon(
                               Icons.camera_alt_outlined,
                               color: AppColor.secondary,
-                              size: 30,
+                              size: 32,
                             ),
                           ),
                         ),
@@ -83,7 +83,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Color(0x1A1D4ED8),
-                                    blurRadius: 18,
+                                    blurRadius: 20,
                                     offset: Offset(0, 8),
                                   ),
                                 ],
@@ -95,7 +95,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                     'Verifikasi OTP',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 22,
+                                      fontSize: 24,
                                       fontWeight: FontWeight.w800,
                                       color: AppColor.textPrimary,
                                     ),
@@ -105,7 +105,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                     'Masukkan kode yang baru saja kami kirimkan.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 16,
                                       color: AppColor.textSecondary,
                                     ),
                                   ),
@@ -115,7 +115,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                     prefixIcon: Icons.password_outlined,
                                     keyboardType: TextInputType.number,
                                   ),
-                                  const SizedBox(height: 18),
+                                  const SizedBox(height: 20),
                                   CustomButton(
                                     text: 'Verifikasi',
                                     onPressed: () {

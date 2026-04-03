@@ -72,7 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: const Icon(
                                 Icons.camera_alt_outlined,
                                 color: AppColor.secondary,
-                                size: 30,
+                                size: 32,
                               ),
                             ),
                           ),
@@ -110,7 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   boxShadow: const [
                                     BoxShadow(
                                       color: Color(0x1A1D4ED8),
-                                      blurRadius: 18,
+                                      blurRadius: 20,
                                       offset: Offset(0, 8),
                                     ),
                                   ],
@@ -123,7 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       'Buat akun baru',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 22,
+                                        fontSize: 24,
                                         fontWeight: FontWeight.w800,
                                         color: AppColor.textPrimary,
                                       ),
@@ -133,7 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       'Mulai kelola aktivitasmu bersama presenzo.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 16,
                                         color: AppColor.textSecondary,
                                       ),
                                     ),
@@ -210,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         return null;
                                       },
                                     ),
-                                    const SizedBox(height: 18),
+                                    const SizedBox(height: 20),
                                     CustomButton(
                                       text: 'Daftar',
                                       isLoading: isLoading,
@@ -282,7 +282,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 'Sudah punya akun? ',
                                 style: TextStyle(
                                   color: AppColor.textSecondary,
-                                  fontSize: 14,
+                                  fontSize: 16,
                                 ),
                               ),
                               GestureDetector(

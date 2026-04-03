@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A0F172A),
-            blurRadius: 14,
+            blurRadius: 16,
             offset: Offset(0, 6),
           ),
         ],
@@ -100,11 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 44,
             decoration: BoxDecoration(
               color: entry.color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(entry.icon, color: entry.color, size: 22),
+            child: Icon(entry.icon, color: entry.color, size: 24),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   formattedDate,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColor.textPrimary,
                   ),
@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: entry.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(1000),
             ),
             child: Text(
               entry.statusLabel,
@@ -183,27 +183,27 @@ class _HomeScreenState extends State<HomeScreen> {
           'Presenzo',
           style: TextStyle(
             color: AppColor.textPrimary,
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
           ),
         ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            width: 42,
-            height: 42,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppColor.primary,
               shape: BoxShape.circle,
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x1A1D4ED8),
-                  blurRadius: 14,
+                  blurRadius: 16,
                   offset: Offset(0, 6),
                 ),
               ],
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 22),
+            child: const Icon(Icons.person, color: Colors.white, size: 20),
           ),
         ],
       ),
@@ -237,67 +237,53 @@ class _HomeScreenState extends State<HomeScreen> {
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x1A1D4ED8),
-                          blurRadius: 22,
+                          blurRadius: 24,
                           offset: Offset(0, 10),
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.18),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.18),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.school_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Selamat datang',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.school_rounded,
-                                color: Colors.white,
-                                size: 28,
+                              Text(
+                                displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Selamat datang',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    displayName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'Siap mulai sesi pelatihan hari ini? Catat kehadiranmu agar progres belajarmu selalu terpantau.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            height: 1.5,
+                            ],
                           ),
                         ),
                       ],
@@ -308,15 +294,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 14,
+                      vertical: 16,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x120F172A),
-                          blurRadius: 14,
+                          blurRadius: 16,
                           offset: Offset(0, 6),
                         ),
                       ],
@@ -343,9 +329,40 @@ class _HomeScreenState extends State<HomeScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: AppColor.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
+                        ),
+                        const SizedBox(height: 16),
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColor.border.withValues(alpha: 0.85),
+                        ),
+                        const SizedBox(height: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Jam Pelatihan',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColor.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '08:00 - 15:00',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColor.textPrimary,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -355,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: SizedBox(
-                          height: 66,
+                          height: 64,
                           child: ElevatedButton(
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -378,14 +395,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 vertical: 12,
                               ),
                               textStyle: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.fingerprint, size: 22),
+                                Icon(Icons.fingerprint, size: 20),
                                 SizedBox(width: 8),
                                 Text('Absen Masuk'),
                               ],
@@ -396,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: SizedBox(
-                          height: 66,
+                          height: 64,
                           child: ElevatedButton(
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -419,14 +436,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 vertical: 12,
                               ),
                               textStyle: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.logout, size: 21),
+                                Icon(Icons.logout, size: 20),
                                 SizedBox(width: 8),
                                 Text('Absen Pulang'),
                               ],
@@ -440,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text(
                     'Riwayat Kehadiran',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppColor.textPrimary,
                     ),
