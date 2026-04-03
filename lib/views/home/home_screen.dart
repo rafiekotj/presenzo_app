@@ -43,31 +43,31 @@ class _HomeScreenState extends State<HomeScreen> {
           return _AttendanceHistoryEntry(
             date: date,
             status: _AttendanceStatus.present,
-            detail: 'Check In - 07:37',
+            detail: 'Masuk - 07:37:12',
           );
         case 1:
           return _AttendanceHistoryEntry(
             date: date,
             status: _AttendanceStatus.late,
-            detail: '08:32 - 15:35',
+            detail: 'Terlambat - 08:32:09',
           );
         case 2:
           return _AttendanceHistoryEntry(
             date: date,
             status: _AttendanceStatus.leave,
-            detail: 'Izin - Keperluan pribadi',
+            detail: 'Izin - Sakit',
           );
         case 3:
           return _AttendanceHistoryEntry(
             date: date,
             status: _AttendanceStatus.absent,
-            detail: 'Tidak ada catatan absen',
+            detail: 'Tanpa Keterangan',
           );
         default:
           return _AttendanceHistoryEntry(
             date: date,
             status: _AttendanceStatus.present,
-            detail: '07:47 - 15:03',
+            detail: '07:47:21 - 15:03:48',
           );
       }
     }).toList();
@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   formattedDate,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColor.textPrimary,
                   ),
@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   entry.detail,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppColor.textSecondary,
                   ),
                 ),
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               entry.statusLabel,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: entry.color,
               ),
@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               child: const Icon(
-                                Icons.work_history,
+                                Icons.school_rounded,
                                 color: Colors.white,
                                 size: 28,
                               ),
@@ -266,6 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text(
                                     'Selamat datang',
@@ -275,7 +276,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
                                   Text(
                                     displayName,
                                     maxLines: 1,
@@ -293,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 18),
                         const Text(
-                          'Siap untuk absen hari ini? Pastikan status kehadiran Anda selalu terpantau dengan rapi.',
+                          'Siap mulai sesi pelatihan hari ini? Catat kehadiranmu agar progres belajarmu selalu terpantau.',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -354,97 +354,83 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColor.surface,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: AppColor.border.withValues(alpha: 0.7),
+                        child: SizedBox(
+                          height: 66,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Aksi Check In')),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              elevation: 7,
+                              shadowColor: const Color(0x4D1D4ED8),
+                              backgroundColor: AppColor.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x0F0F172A),
-                                blurRadius: 16,
-                                offset: Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppColor.primary.withValues(
-                                    alpha: 0.12,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: const Icon(
-                                  Icons.fingerprint,
-                                  color: AppColor.primary,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              const Text(
-                                'Check In',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColor.textPrimary,
-                                ),
-                              ),
-                            ],
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.fingerprint, size: 22),
+                                SizedBox(width: 8),
+                                Text('Absen Masuk'),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColor.surface,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: AppColor.border.withValues(alpha: 0.7),
+                        child: SizedBox(
+                          height: 66,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Aksi Check Out')),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              elevation: 7,
+                              shadowColor: const Color(0x3316A34A),
+                              backgroundColor: AppColor.success,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x0F0F172A),
-                                blurRadius: 16,
-                                offset: Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppColor.success.withValues(
-                                    alpha: 0.12,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: const Icon(
-                                  Icons.logout,
-                                  color: AppColor.success,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              const Text(
-                                'Check Out',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColor.textPrimary,
-                                ),
-                              ),
-                            ],
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.logout, size: 21),
+                                SizedBox(width: 8),
+                                Text('Absen Pulang'),
+                              ],
+                            ),
                           ),
                         ),
                       ),

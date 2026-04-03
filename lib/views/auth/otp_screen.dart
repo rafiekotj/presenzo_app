@@ -26,45 +26,106 @@ class _OtpScreenState extends State<OtpScreen> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Spacer(),
+                        const SizedBox(height: 12),
                         Center(
-                          child: Text(
-                            "presenzo",
-                            style: TextStyle(
-                              fontSize: 52,
-                              fontWeight: FontWeight.bold,
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: AppColor.primarySoft,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_outlined,
+                              color: AppColor.secondary,
+                              size: 30,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 64),
-                        const Text(
-                          'Verifikasi OTP',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(height: 12),
+                        const Center(
+                          child: Text(
+                            'presenzo',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              color: AppColor.textPrimary,
+                              letterSpacing: -0.8,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Masukkan kode OTP yang telah dikirim ke email Anda',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 24),
-                        const CustomTextField(
-                          hintText: 'Kode OTP',
-                          prefixIcon: Icons.password_outlined,
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 24),
-                        CustomButton(
-                          text: 'Verifikasi',
-                          onPressed: () {
-                            context.push(const NewPasswordScreen());
-                          },
+                        const SizedBox(height: 28),
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                22,
+                                20,
+                                18,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColor.border.withValues(
+                                    alpha: 0.75,
+                                  ),
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x1A1D4ED8),
+                                    blurRadius: 18,
+                                    offset: Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text(
+                                    'Verifikasi OTP',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColor.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Masukkan kode yang baru saja kami kirimkan.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColor.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  const CustomTextField(
+                                    hintText: 'Kode OTP',
+                                    prefixIcon: Icons.password_outlined,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  const SizedBox(height: 18),
+                                  CustomButton(
+                                    text: 'Verifikasi',
+                                    onPressed: () {
+                                      context.push(const NewPasswordScreen());
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                         const Spacer(),
                       ],

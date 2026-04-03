@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
-import 'package:presenzo_app/views/auth/register_screen.dart';
+import 'package:presenzo_app/views/auth/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
           displayColor: AppColor.textPrimary,
         ),
       ),
-      home: const RegisterScreen(),
+      home: const LoginScreen(),
     );
   }
 }
