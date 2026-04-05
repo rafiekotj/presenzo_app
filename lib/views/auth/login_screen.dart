@@ -94,28 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 12),
-                          Center(
-                            child: Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: AppColor.primarySoft,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt_outlined,
-                                color: AppColor.secondary,
-                                size: 32,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
+                          const Spacer(),
                           const Center(
                             child: Text(
                               'presenzo',
                               style: TextStyle(
-                                fontSize: 36,
+                                fontSize: 32,
                                 fontWeight: FontWeight.w800,
                                 color: AppColor.textPrimary,
                                 letterSpacing: -0.8,
@@ -123,181 +107,146 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 28),
-                          Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 420),
-                              child: Container(
-                                padding: const EdgeInsets.fromLTRB(
-                                  20,
-                                  22,
-                                  20,
-                                  18,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColor.surface,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: AppColor.border.withValues(
-                                      alpha: 0.75,
-                                    ),
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x1A1D4ED8),
-                                      blurRadius: 20,
-                                      offset: Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    const Text(
-                                      'Masuk ke akun Anda',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColor.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      'Gunakan email terdaftar untuk melanjutkan.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: AppColor.textSecondary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    CustomTextField(
-                                      controller: emailController,
-                                      hintText: 'Email',
-                                      prefixIcon: Icons.email_outlined,
-                                      keyboardType: TextInputType.emailAddress,
-                                      validator: (value) {
-                                        final email = (value ?? '').trim();
-                                        if (email.isEmpty) {
-                                          return 'Email tidak boleh kosong';
-                                        }
-                                        if (!email.contains('@')) {
-                                          return 'Email tidak valid';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    const SizedBox(height: 10),
-                                    CustomTextField(
-                                      controller: passwordController,
-                                      hintText: 'Kata Sandi',
-                                      prefixIcon: Icons.lock_outline,
-                                      obscureText: isVisibility,
-                                      suffixIcon: InkWell(
-                                        onTap: visibilityOnOff,
-                                        child: Icon(
-                                          size: 20,
-                                          isVisibility
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 12,
-                                        bottom: 16,
-                                      ),
-                                      child: Align(
-                                        alignment: Alignment.centerRight,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            context.push(
-                                              const ForgotPasswordScreen(),
-                                            );
-                                          },
-                                          child: const Text(
-                                            'Lupa kata sandi?',
-                                            style: TextStyle(
-                                              color: AppColor.primary,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    CustomButton(
-                                      text: 'Masuk',
-                                      isLoading: isLoading,
-                                      onPressed: () async {
-                                        if (!_formKey.currentState!
-                                            .validate()) {
-                                          return;
-                                        }
-
-                                        setState(() {
-                                          isLoading = true;
-                                        });
-
-                                        String message = 'Login gagal';
-                                        String token = '';
-
-                                        try {
-                                          final login = await loginUser(
-                                            email: emailController.text.trim(),
-                                            password: passwordController.text,
-                                          );
-
-                                          token = login?.data?.token ?? '';
-                                          message =
-                                              login?.message ??
-                                              'Login berhasil';
-
-                                          if (token.isNotEmpty) {
-                                            await PreferenceHandler()
-                                                .storingToken(token);
-                                            await PreferenceHandler()
-                                                .storingIsLogin(true);
-                                          }
-                                        } catch (e) {
-                                          log(e.toString());
-                                          message = e
-                                              .toString()
-                                              .replaceFirst('Exception: ', '')
-                                              .replaceFirst(
-                                                'HttpException: ',
-                                                '',
-                                              )
-                                              .trim();
-                                        }
-
-                                        if (!context.mounted) return;
-
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(content: Text(message)),
-                                        );
-
-                                        setState(() {
-                                          isLoading = false;
-                                        });
-
-                                        if (token.isNotEmpty) {
-                                          context.pushAndRemoveAll(
-                                            const BottomNavbar(),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ],
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColor.textPrimary,
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              CustomTextField(
+                                controller: emailController,
+                                hintText: 'Email',
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
+                                enableSuggestions: false,
+                                autocorrect: false,
+                                validator: (value) {
+                                  final email = (value ?? '').trim();
+                                  if (email.isEmpty) {
+                                    return 'Email tidak boleh kosong';
+                                  }
+                                  if (!email.contains('@')) {
+                                    return 'Email tidak valid';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              CustomTextField(
+                                controller: passwordController,
+                                hintText: 'Kata Sandi',
+                                prefixIcon: Icons.lock_outline,
+                                obscureText: isVisibility,
+                                enableSuggestions: false,
+                                autocorrect: false,
+                                suffixIcon: InkWell(
+                                  onTap: visibilityOnOff,
+                                  child: Icon(
+                                    size: 20,
+                                    isVisibility
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').isEmpty) {
+                                    return 'Kata sandi tidak boleh kosong';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 12,
+                                  bottom: 16,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      context.push(
+                                        const ForgotPasswordScreen(),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Lupa kata sandi?',
+                                      style: TextStyle(
+                                        color: AppColor.primary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              CustomButton(
+                                text: 'Masuk',
+                                isLoading: isLoading,
+                                onPressed: () async {
+                                  if (!_formKey.currentState!.validate()) {
+                                    return;
+                                  }
+
+                                  setState(() {
+                                    isLoading = true;
+                                  });
+
+                                  String message = 'Login gagal';
+                                  String token = '';
+
+                                  try {
+                                    final login = await loginUser(
+                                      email: emailController.text.trim(),
+                                      password: passwordController.text,
+                                    );
+
+                                    token = login?.data?.token ?? '';
+                                    message =
+                                        login?.message ?? 'Login berhasil';
+
+                                    if (token.isNotEmpty) {
+                                      await PreferenceHandler().storingToken(
+                                        token,
+                                      );
+                                      await PreferenceHandler().storingIsLogin(
+                                        true,
+                                      );
+                                    }
+                                  } catch (e) {
+                                    log(e.toString());
+                                    message = e
+                                        .toString()
+                                        .replaceFirst('Exception: ', '')
+                                        .replaceFirst('HttpException: ', '')
+                                        .trim();
+                                  }
+
+                                  if (!context.mounted) return;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(message)),
+                                  );
+
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+
+                                  if (token.isNotEmpty) {
+                                    context.pushAndRemoveAll(
+                                      const BottomNavbar(),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 24),
+                          const Spacer(),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -305,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'Belum punya akun? ',
                                 style: TextStyle(
                                   color: AppColor.textSecondary,
-                                  fontSize: 16,
+                                  fontSize: 12,
                                 ),
                               ),
                               GestureDetector(
@@ -316,13 +265,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Daftar',
                                   style: TextStyle(
                                     color: AppColor.primary,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const Spacer(),
                         ],
                       ),
                     ),

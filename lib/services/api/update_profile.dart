@@ -88,13 +88,12 @@ Future<List<ProfileOptionItem>> _getOptions({
   required String fallbackPrefix,
 }) async {
   final token = await PreferenceHandler.getToken();
-  final response = await http.get(
-    Uri.parse(endpoint),
-    headers: {
-      "Accept": "application/json",
-      "Authorization": "Bearer ${token ?? ''}",
-    },
-  );
+  final headers = <String, String>{"Accept": "application/json"};
+  if ((token ?? '').isNotEmpty) {
+    headers["Authorization"] = "Bearer ${token!}";
+  }
+
+  final response = await http.get(Uri.parse(endpoint), headers: headers);
 
   log(response.body);
   if (response.statusCode != 200) {

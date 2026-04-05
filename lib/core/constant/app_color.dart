@@ -7,9 +7,10 @@ class AppColor {
   static const Color primarySoft = Color(0xFFE0E7FF);
 
   // Background
-  static const Color backgroundLight = Color(0xFFF8FAFC);
+  static const Color backgroundLight = Color(0xFFFCFDFE);
   static const Color backgroundDark = Color(0xFF0F172A);
   static const Color surface = Color(0xFFFFFFFF);
+  static const Color fieldFill = Color(0xFFF1F5F9);
 
   // Text
   static const Color textPrimary = Color(0xFF1E293B);

@@ -9,20 +9,48 @@ Future<RegisterModel?> registerUser({
   required String name,
   required String email,
   required String password,
+  required int trainingId,
+  required int batchId,
+  required String jenisKelamin,
 }) async {
   final response = await http.post(
     Uri.parse(Endpoint.register),
     headers: {"Accept": "application/json", "Content-Type": "application/json"},
-    body: jsonEncode({"name": name, "email": email, "password": password}),
+    body: jsonEncode({
+      "name": name,
+      "email": email,
+      "password": password,
+      "training_id": trainingId,
+      "batch_id": batchId,
+      "jenis_kelamin": jenisKelamin,
+    }),
   );
 
-  log(response.body);
+  log('register status=${response.statusCode} body=${response.body}');
   if (response.statusCode == 200) {
     return RegisterModel.fromJson(json.decode(response.body));
   } else {
-    final error = RegisterModel.fromJson(json.decode(response.body));
-    log(error.toString());
+    final dynamic decoded = json.decode(response.body);
+    final error = RegisterModel.fromJson(decoded as Map<String, dynamic>?);
 
-    throw Exception(error.message);
+    String message = error.message ?? 'Pendaftaran gagal';
+    if (decoded is Map<String, dynamic>) {
+      final errors = decoded['errors'];
+      if (errors is Map<String, dynamic> && errors.isNotEmpty) {
+        final details = <String>[];
+        errors.forEach((key, value) {
+          if (value is List && value.isNotEmpty) {
+            details.add('$key: ${value.first}');
+          } else if (value != null) {
+            details.add('$key: $value');
+          }
+        });
+        if (details.isNotEmpty) {
+          message = '$message\n${details.join('\n')}';
+        }
+      }
+    }
+
+    throw Exception(message);
   }
 }

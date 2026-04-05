@@ -13,6 +13,16 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
+  final TextEditingController otpController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    otpController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,105 +40,90 @@ class _OtpScreenState extends State<OtpScreen> {
                       horizontal: 16,
                       vertical: 20,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 12),
-                        Center(
-                          child: Container(
-                            width: 64,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: AppColor.primarySoft,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt_outlined,
-                              color: AppColor.secondary,
-                              size: 32,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Center(
-                          child: Text(
-                            'presenzo',
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              color: AppColor.textPrimary,
-                              letterSpacing: -0.8,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-                        Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 420),
-                            child: Container(
-                              padding: const EdgeInsets.fromLTRB(
-                                20,
-                                22,
-                                20,
-                                18,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Spacer(),
+                          const Center(
+                            child: Text(
+                              'presenzo',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.textPrimary,
+                                letterSpacing: -0.8,
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColor.surface,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: AppColor.border.withValues(
-                                    alpha: 0.75,
-                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Verifikasi OTP',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColor.textPrimary,
                                 ),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x1A1D4ED8),
-                                    blurRadius: 20,
-                                    offset: Offset(0, 8),
-                                  ),
-                                ],
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const Text(
-                                    'Verifikasi OTP',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColor.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Masukkan kode yang baru saja kami kirimkan.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: AppColor.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const CustomTextField(
-                                    hintText: 'Kode OTP',
-                                    prefixIcon: Icons.password_outlined,
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                  const SizedBox(height: 20),
-                                  CustomButton(
-                                    text: 'Verifikasi',
-                                    onPressed: () {
-                                      context.push(const NewPasswordScreen());
-                                    },
-                                  ),
-                                ],
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Masukkan kode yang baru saja kami kirimkan.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColor.textSecondary,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 20),
+                              CustomTextField(
+                                controller: otpController,
+                                hintText: 'Kode OTP',
+                                prefixIcon: Icons.password_outlined,
+                                keyboardType: TextInputType.number,
+                                enableSuggestions: false,
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Kode OTP tidak boleh kosong';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              CustomButton(
+                                text: 'Verifikasi',
+                                isLoading: isLoading,
+                                onPressed: () async {
+                                  if (!_formKey.currentState!.validate()) {
+                                    return;
+                                  }
+
+                                  setState(() {
+                                    isLoading = true;
+                                  });
+
+                                  const message = 'OTP berhasil diverifikasi';
+
+                                  if (!context.mounted) return;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(message)),
+                                  );
+
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+
+                                  context.push(const NewPasswordScreen());
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                        const Spacer(),
-                      ],
+                          const Spacer(),
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -9,6 +9,8 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final bool readOnly;
   final TextInputType? keyboardType;
+  final bool? enableSuggestions;
+  final bool? autocorrect;
   final String? Function(String?)? validator;
 
   const CustomTextField({
@@ -20,6 +22,8 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.readOnly = false,
     this.keyboardType,
+    this.enableSuggestions,
+    this.autocorrect,
     this.validator,
   });
 
@@ -29,14 +33,29 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       cursorColor: AppColor.textHint,
       obscureText: obscureText,
+      obscuringCharacter: '•',
       readOnly: readOnly,
       keyboardType: keyboardType,
+      enableSuggestions: enableSuggestions ?? !obscureText,
+      autocorrect: autocorrect ?? !obscureText,
+      smartDashesType: SmartDashesType.disabled,
+      smartQuotesType: SmartQuotesType.disabled,
+      textAlignVertical: TextAlignVertical.center,
+      strutStyle: StrutStyle(fontSize: 14, height: 1.2, forceStrutHeight: true),
+      style: TextStyle(
+        color: AppColor.textPrimary,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.2,
+      ),
       decoration: InputDecoration(
         isDense: true,
+        filled: true,
+        fillColor: AppColor.fieldFill,
         hintText: hintText,
         hintStyle: TextStyle(
           color: AppColor.textHint,
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
         contentPadding: EdgeInsets.all(12),
@@ -70,7 +89,7 @@ class CustomTextField extends StatelessWidget {
         ),
         errorStyle: TextStyle(
           color: AppColor.error,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w500,
         ),
       ),
