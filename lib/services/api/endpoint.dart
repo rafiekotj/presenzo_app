@@ -1,5 +1,5 @@
 class Endpoint {
-  static const String baseUrl = "https://absensib1.mobileprojp.com/api";
+  static const String baseUrl = "https://appabsensi.mobileprojp.com/api";
 
   // Auth endpoints
   /// POST - Dipakai di RegisterScreen untuk membuat akun baru
