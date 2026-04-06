@@ -9,6 +9,7 @@ import 'package:presenzo_app/models/get_model.dart';
 import 'package:presenzo_app/services/api/attendance.dart';
 import 'package:presenzo_app/services/api/get_user.dart';
 import 'package:presenzo_app/views/attendance/attendance_history_screen.dart';
+import 'package:presenzo_app/views/attendance/attendance_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final Future<GetUserModel?> _profileFuture;
   late final Future<List<_AttendanceHistoryEntry>> _attendanceHistoryFuture;
+  late final Future<AttendanceApiResponse> _todayAttendanceFuture;
   Timer? _clockTimer;
   DateTime _currentDateTime = DateTime.now();
 
@@ -196,6 +198,11 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _profileFuture = getUser();
     _attendanceHistoryFuture = _loadRecentHistory();
+    final today = DateTime.now();
+    final dateFormatter = DateFormat('yyyy-MM-dd');
+    _todayAttendanceFuture = getTodayAttendance(
+      attendanceDate: dateFormatter.format(today),
+    );
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {
@@ -472,98 +479,183 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 64,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Aksi Check In')),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              elevation: 8,
-                              shadowColor: const Color(0x4D1D4ED8),
-                              backgroundColor: AppColor.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                side: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.25),
+                  const SizedBox(height: 16),
+                  FutureBuilder<AttendanceApiResponse>(
+                    future: _todayAttendanceFuture,
+                    builder: (context, attendanceSnapshot) {
+                      final hasCheckIn =
+                          (attendanceSnapshot.data?.data?.checkInTime ?? '')
+                              .trim()
+                              .isNotEmpty;
+                      final hasCheckOut =
+                          (attendanceSnapshot.data?.data?.checkOutTime ?? '')
+                              .trim()
+                              .isNotEmpty;
+
+                      final isCheckInEnabled =
+                          !hasCheckIn &&
+                          attendanceSnapshot.connectionState ==
+                              ConnectionState.done;
+                      final isCheckOutEnabled =
+                          hasCheckIn &&
+                          !hasCheckOut &&
+                          attendanceSnapshot.connectionState ==
+                              ConnectionState.done;
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 64,
+                              child: ElevatedButton(
+                                onPressed: isCheckInEnabled
+                                    ? () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) =>
+                                                const AttendanceScreen(),
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  elevation: isCheckInEnabled ? 8 : 0,
+                                  shadowColor: isCheckInEnabled
+                                      ? const Color(0x4D1D4ED8)
+                                      : Colors.transparent,
+                                  backgroundColor: isCheckInEnabled
+                                      ? AppColor.primary
+                                      : AppColor.textSecondary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                  foregroundColor: isCheckInEnabled
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                    side: BorderSide(
+                                      color: isCheckInEnabled
+                                          ? Colors.white.withValues(alpha: 0.25)
+                                          : Colors.transparent,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.fingerprint,
+                                      size: 22,
+                                      color: isCheckInEnabled
+                                          ? Colors.white
+                                          : Colors.white.withValues(alpha: 0.5),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Absen Masuk',
+                                      style: TextStyle(
+                                        color: isCheckInEnabled
+                                            ? Colors.white
+                                            : Colors.white.withValues(
+                                                alpha: 0.5,
+                                              ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              textStyle: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.fingerprint, size: 22),
-                                SizedBox(width: 10),
-                                Text('Absen Masuk'),
-                              ],
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: SizedBox(
-                          height: 64,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Aksi Check Out')),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              elevation: 8,
-                              shadowColor: const Color(0x3316A34A),
-                              backgroundColor: AppColor.success,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                side: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.25),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: SizedBox(
+                              height: 64,
+                              child: ElevatedButton(
+                                onPressed: isCheckOutEnabled
+                                    ? () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) =>
+                                                const AttendanceScreen(),
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  elevation: isCheckOutEnabled ? 8 : 0,
+                                  shadowColor: isCheckOutEnabled
+                                      ? const Color(0x3316A34A)
+                                      : Colors.transparent,
+                                  backgroundColor: isCheckOutEnabled
+                                      ? AppColor.success
+                                      : AppColor.textSecondary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                  foregroundColor: isCheckOutEnabled
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                    side: BorderSide(
+                                      color: isCheckOutEnabled
+                                          ? Colors.white.withValues(alpha: 0.25)
+                                          : Colors.transparent,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.logout,
+                                      size: 22,
+                                      color: isCheckOutEnabled
+                                          ? Colors.white
+                                          : Colors.white.withValues(alpha: 0.5),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Absen Pulang',
+                                      style: TextStyle(
+                                        color: isCheckOutEnabled
+                                            ? Colors.white
+                                            : Colors.white.withValues(
+                                                alpha: 0.5,
+                                              ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              textStyle: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.logout, size: 22),
-                                SizedBox(width: 10),
-                                Text('Absen Pulang'),
-                              ],
                             ),
                           ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
                           width: 4,
@@ -592,29 +684,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColor.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'Lihat semua →',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.primary,
-                              ),
+                          child: const Text(
+                            'Lihat Riwayat',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.primary,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   FutureBuilder<List<_AttendanceHistoryEntry>>(
                     future: _attendanceHistoryFuture,
                     builder: (context, historySnapshot) {
