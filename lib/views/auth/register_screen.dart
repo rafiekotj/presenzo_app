@@ -3,8 +3,9 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
+import 'package:presenzo_app/services/api/batch.dart';
 import 'package:presenzo_app/services/api/register.dart';
-import 'package:presenzo_app/services/api/update_profile.dart';
+import 'package:presenzo_app/services/api/training.dart';
 import 'package:presenzo_app/views/auth/login_screen.dart';
 import 'package:presenzo_app/widgets/custom_button.dart';
 import 'package:presenzo_app/widgets/custom_dropdown_field.dart';
@@ -27,8 +28,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
   bool isLoadingOptions = true;
 
-  List<ProfileOptionItem> trainings = const [];
-  List<ProfileOptionItem> batches = const [];
+  List<TrainingOptionItem> trainings = const [];
+  List<BatchOptionItem> batches = const [];
   List<DropdownMenuItem<int>> trainingMenuItems = const [];
   List<DropdownMenuItem<int>> batchMenuItems = const [];
   int? selectedTrainingId;
@@ -53,9 +54,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final results = await Future.wait([getTrainings(), getBatches()]);
-      final loadedTrainings = results[0];
-      final loadedBatches = results[1];
+      final loadedTrainings = await getTrainings();
+      final loadedBatches = await getBatches();
       if (!mounted) return;
 
       setState(() {

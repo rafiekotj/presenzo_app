@@ -63,7 +63,7 @@ extension ExtendedNavigator on BuildContext {
     );
   }
 
-  void pop([result]) async {
+  void pop([Object? result]) async {
     return Navigator.of(this).pop(result);
   }
 }

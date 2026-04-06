@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
@@ -21,6 +23,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _profileFuture = getUser();
+  }
+
+  ImageProvider? _buildAvatarProvider(String? photoUrl) {
+    final rawPhoto = (photoUrl ?? '').trim();
+    if (rawPhoto.isEmpty) return null;
+
+    if (rawPhoto.startsWith('http://') || rawPhoto.startsWith('https://')) {
+      return NetworkImage(rawPhoto);
+    }
+
+    if (rawPhoto.startsWith('data:image')) {
+      final commaIndex = rawPhoto.indexOf(',');
+      if (commaIndex > -1 && commaIndex + 1 < rawPhoto.length) {
+        try {
+          final rawBase64 = rawPhoto.substring(commaIndex + 1);
+          final bytes = base64Decode(rawBase64);
+          return MemoryImage(bytes);
+        } catch (_) {
+          return null;
+        }
+      }
+    }
+
+    try {
+      final bytes = base64Decode(rawPhoto);
+      return MemoryImage(bytes);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -83,14 +114,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: AppColor.primarySoft,
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColor.primary, width: 2),
                         ),
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColor.primary,
-                          size: 34,
+                        child: CircleAvatar(
+                          backgroundColor: AppColor.primarySoft,
+                          backgroundImage: _buildAvatarProvider(user?.photoUrl),
+                          child: _buildAvatarProvider(user?.photoUrl) == null
+                              ? const Icon(
+                                  Icons.person,
+                                  color: AppColor.primary,
+                                  size: 34,
+                                )
+                              : null,
                         ),
                       ),
                       const SizedBox(width: 16),

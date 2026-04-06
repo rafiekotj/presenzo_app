@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/models/get_model.dart';
 import 'package:presenzo_app/services/api/get_user.dart';
+import 'package:presenzo_app/services/api/profile_photo.dart';
 import 'package:presenzo_app/services/api/update_profile.dart';
 import 'package:presenzo_app/widgets/custom_button.dart';
 import 'package:presenzo_app/widgets/custom_text_field.dart';
@@ -26,7 +27,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _jenisKelaminController = TextEditingController();
+  final TextEditingController _batchController = TextEditingController();
+  final TextEditingController _trainingController = TextEditingController();
 
   Uint8List? _pendingPhotoBytes;
   String? _pendingPhotoBase64;
@@ -38,7 +41,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
+    _jenisKelaminController.dispose();
+    _batchController.dispose();
+    _trainingController.dispose();
     super.dispose();
   }
 
@@ -50,13 +55,18 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   Future<void> _loadInitialData() async {
     final profileResult = await getUser();
-
     final user = profileResult?.data;
     _userData = user;
 
     _nameController.text = user?.name ?? '';
     _emailController.text = user?.email ?? '';
-    _phoneController.text = user?.phone ?? '';
+    _jenisKelaminController.text = user?.jenisKelamin == 'L'
+        ? 'Laki-laki'
+        : user?.jenisKelamin == 'P'
+        ? 'Perempuan'
+        : '-';
+    _batchController.text = user?.batch?.batchKe ?? '-';
+    _trainingController.text = user?.training?.title ?? '-';
   }
 
   Future<void> _showPhotoPickerSheet() async {
@@ -225,7 +235,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         await updateProfilePhotoBase64(base64Image: _pendingPhotoBase64!);
       }
 
-      await updateProfile(name: name, phone: _phoneController.text.trim());
+      await updateProfile(name: name);
 
       final refreshed = await getUser();
       final user = refreshed?.data;
@@ -235,7 +245,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         _userData = user;
         _nameController.text = user?.name ?? _nameController.text;
         _emailController.text = user?.email ?? _emailController.text;
-        _phoneController.text = user?.phone ?? _phoneController.text;
+        _jenisKelaminController.text = user?.jenisKelamin == 'L'
+            ? 'Laki-laki'
+            : user?.jenisKelamin == 'P'
+            ? 'Perempuan'
+            : '-';
+        _batchController.text = user?.batch?.batchKe ?? '-';
+        _trainingController.text = user?.training?.title ?? '-';
 
         _pendingPhotoBytes = null;
         _pendingPhotoBase64 = null;
@@ -272,8 +288,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       appBar: AppBar(
         backgroundColor: AppColor.backgroundLight,
         foregroundColor: AppColor.textPrimary,
-        centerTitle: true,
-        title: Text("Edit Profil"),
+        title: const Text("Edit Profil"),
       ),
       body: FutureBuilder<void>(
         future: _initialLoadFuture,
@@ -447,52 +462,75 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                     },
                                   ),
                                   const SizedBox(height: 10),
-                                  CustomTextField(
-                                    controller: _phoneController,
-                                    hintText: 'Nomor Telepon',
-                                    keyboardType: TextInputType.phone,
-                                    prefixIcon: Icons.phone_outlined,
+                                  AbsorbPointer(
+                                    child: Stack(
+                                      children: [
+                                        CustomTextField(
+                                          controller: _jenisKelaminController,
+                                          hintText: 'Jenis Kelamin',
+                                          prefixIcon: Icons.wc_outlined,
+                                          readOnly: true,
+                                        ),
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
-                                  _InfoCard(
-                                    icon: Icons.groups_outlined,
-                                    title: 'Batch',
-                                    value:
-                                        _userData?.batch?.batchKe
-                                                ?.trim()
-                                                .isNotEmpty ==
-                                            true
-                                        ? 'Batch ${_userData?.batch?.batchKe}'
-                                        : (_userData?.batchKe
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true
-                                              ? 'Batch ${_userData?.batchKe}'
-                                              : '-'),
+                                  AbsorbPointer(
+                                    child: Stack(
+                                      children: [
+                                        CustomTextField(
+                                          controller: _batchController,
+                                          hintText: 'Batch',
+                                          prefixIcon: Icons.groups_outlined,
+                                          readOnly: true,
+                                        ),
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
-                                  _InfoCard(
-                                    icon: Icons.school_outlined,
-                                    title: 'Training',
-                                    value:
-                                        _userData?.training?.title
-                                                ?.trim()
-                                                .isNotEmpty ==
-                                            true
-                                        ? _userData!.training!.title!.trim()
-                                        : (_userData?.trainingTitle
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true
-                                              ? _userData!.trainingTitle!.trim()
-                                              : '-'),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Data batch dan training diambil langsung dari /api/profile.',
-                                    style: TextStyle(
-                                      color: AppColor.textSecondary,
-                                      fontSize: 12,
+                                  AbsorbPointer(
+                                    child: Stack(
+                                      children: [
+                                        CustomTextField(
+                                          controller: _trainingController,
+                                          hintText: 'Training',
+                                          prefixIcon: Icons.school_outlined,
+                                          readOnly: true,
+                                        ),
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(height: 20),
@@ -515,60 +553,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColor.fieldFill,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.textHint),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppColor.textHint),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColor.textHint,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: AppColor.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
