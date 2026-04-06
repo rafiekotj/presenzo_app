@@ -6,7 +6,9 @@ import 'package:presenzo_app/widgets/custom_button.dart';
 import 'package:presenzo_app/widgets/custom_text_field.dart';
 
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({super.key});
+  const OtpScreen({super.key, required this.email});
+
+  final String email;
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -64,20 +66,19 @@ class _OtpScreenState extends State<OtpScreen> {
                               const Text(
                                 'Verifikasi OTP',
                                 style: TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w800,
                                   color: AppColor.textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 8),
                               const Text(
                                 'Masukkan kode yang baru saja kami kirimkan.',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   color: AppColor.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 12),
                               CustomTextField(
                                 controller: otpController,
                                 hintText: 'Kode OTP',
@@ -91,9 +92,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 8),
                               CustomButton(
-                                text: 'Verifikasi',
+                                text: 'Lanjut',
                                 isLoading: isLoading,
                                 onPressed: () async {
                                   if (!_formKey.currentState!.validate()) {
@@ -104,19 +105,20 @@ class _OtpScreenState extends State<OtpScreen> {
                                     isLoading = true;
                                   });
 
-                                  const message = 'OTP berhasil diverifikasi';
-
                                   if (!context.mounted) return;
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
+                                  context.push(
+                                    NewPasswordScreen(
+                                      email: widget.email,
+                                      otp: otpController.text.trim(),
+                                    ),
                                   );
 
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-
-                                  context.push(const NewPasswordScreen());
+                                  if (mounted) {
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  }
                                 },
                               ),
                             ],

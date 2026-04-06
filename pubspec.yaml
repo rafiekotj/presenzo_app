@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  dropdown_button2: ^3.0.0
   google_maps_flutter: ^2.17.0
   geolocator: ^14.0.2
   geocoding: ^4.0.0

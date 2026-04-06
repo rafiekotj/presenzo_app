@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
+import 'package:presenzo_app/services/api/reset_password.dart';
 import 'package:presenzo_app/views/auth/login_screen.dart';
 import 'package:presenzo_app/widgets/custom_button.dart';
 import 'package:presenzo_app/widgets/custom_text_field.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({super.key});
+  const NewPasswordScreen({super.key, required this.email, required this.otp});
+
+  final String email;
+  final String otp;
 
   @override
   State<NewPasswordScreen> createState() => _NewPasswordScreenState();
@@ -177,19 +181,39 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                     isLoading = true;
                                   });
 
-                                  const message = 'Password berhasil direset';
+                                  try {
+                                    final message = await resetPasswordWithOtp(
+                                      email: widget.email,
+                                      otp: widget.otp,
+                                      password: passwordController.text,
+                                    );
 
-                                  if (!context.mounted) return;
+                                    if (!context.mounted) return;
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(message)),
+                                    );
 
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-
-                                  context.pushAndRemoveAll(const LoginScreen());
+                                    context.pushAndRemoveAll(
+                                      const LoginScreen(),
+                                    );
+                                  } catch (error) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(error.toString()),
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                    }
+                                  }
                                 },
                               ),
                             ],

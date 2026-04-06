@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
+import 'package:presenzo_app/services/api/forgot_password.dart';
 import 'package:presenzo_app/views/auth/otp_screen.dart';
 import 'package:presenzo_app/widgets/custom_button.dart';
 import 'package:presenzo_app/widgets/custom_text_field.dart';
@@ -69,7 +70,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   color: AppColor.textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 4),
                               const Text(
                                 'Masukkan email akunmu untuk menerima kode OTP.',
                                 style: TextStyle(
@@ -77,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   color: AppColor.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               CustomTextField(
                                 controller: emailController,
                                 hintText: 'Email',
@@ -96,7 +96,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 8),
                               CustomButton(
                                 text: 'Kirim Kode OTP',
                                 isLoading: isLoading,
@@ -109,20 +109,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                     isLoading = true;
                                   });
 
-                                  final message =
-                                      'Kode OTP telah dikirim ke email Anda';
+                                  try {
+                                    final message =
+                                        await requestOtpForForgotPassword(
+                                          email: emailController.text.trim(),
+                                        );
 
-                                  if (!context.mounted) return;
+                                    if (!context.mounted) return;
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(message)),
+                                    );
 
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-
-                                  context.push(const OtpScreen());
+                                    context.push(
+                                      OtpScreen(
+                                        email: emailController.text.trim(),
+                                      ),
+                                    );
+                                  } catch (error) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(error.toString()),
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                    }
+                                  }
                                 },
                               ),
                             ],
