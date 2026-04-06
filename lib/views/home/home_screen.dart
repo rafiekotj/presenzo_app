@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
+import 'package:presenzo_app/models/attendance_model.dart';
 import 'package:presenzo_app/models/get_model.dart';
+import 'package:presenzo_app/services/api/attendance.dart';
 import 'package:presenzo_app/services/api/get_user.dart';
 import 'package:presenzo_app/views/attendance/attendance_history_screen.dart';
 
@@ -16,62 +18,63 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final Future<GetUserModel?> _profileFuture;
+  late final Future<List<_AttendanceHistoryEntry>> _attendanceHistoryFuture;
   Timer? _clockTimer;
   DateTime _currentDateTime = DateTime.now();
 
-  List<_AttendanceHistoryEntry> get _attendanceHistory {
-    final workdays = <DateTime>[];
-    var cursor = DateTime(
-      _currentDateTime.year,
-      _currentDateTime.month,
-      _currentDateTime.day,
+  Future<List<_AttendanceHistoryEntry>> _loadRecentHistory() async {
+    final today = DateTime.now();
+    final endDate = DateTime(today.year, today.month, today.day);
+    final startDate = endDate.subtract(const Duration(days: 4));
+    final formatter = DateFormat('yyyy-MM-dd');
+
+    final records = await getAttendanceHistory(
+      startDate: formatter.format(startDate),
+      endDate: formatter.format(endDate),
+      limit: 5,
     );
 
-    while (workdays.length < 5) {
-      if (cursor.weekday != DateTime.saturday &&
-          cursor.weekday != DateTime.sunday) {
-        workdays.add(cursor);
-      }
-      cursor = cursor.subtract(const Duration(days: 1));
+    return records.map(_mapRecordToEntry).toList();
+  }
+
+  _AttendanceHistoryEntry _mapRecordToEntry(AttendanceRecord record) {
+    final date =
+        DateTime.tryParse(record.attendanceDate ?? '') ?? DateTime.now();
+    final status = (record.status ?? '').toLowerCase();
+    final checkIn = (record.checkInTime ?? '').trim();
+    final checkOut = (record.checkOutTime ?? '').trim();
+    final reason = (record.alasanIzin ?? '').trim();
+
+    if (status == 'izin') {
+      final detail = reason.isEmpty ? 'Izin' : 'Izin - $reason';
+      return _AttendanceHistoryEntry(
+        date: date,
+        status: _AttendanceStatus.leave,
+        detail: detail,
+      );
     }
 
-    return workdays.asMap().entries.map((entry) {
-      final index = entry.key;
-      final date = entry.value;
+    if (checkIn.isNotEmpty && checkOut.isNotEmpty) {
+      return _AttendanceHistoryEntry(
+        date: date,
+        status: _AttendanceStatus.present,
+        detail: '$checkIn - $checkOut',
+      );
+    }
 
-      switch (index) {
-        case 0:
-          return _AttendanceHistoryEntry(
-            date: date,
-            status: _AttendanceStatus.present,
-            detail: 'Masuk - 07:37:12',
-          );
-        case 1:
-          return _AttendanceHistoryEntry(
-            date: date,
-            status: _AttendanceStatus.late,
-            detail: 'Terlambat - 08:32:09',
-          );
-        case 2:
-          return _AttendanceHistoryEntry(
-            date: date,
-            status: _AttendanceStatus.leave,
-            detail: 'Izin - Sakit',
-          );
-        case 3:
-          return _AttendanceHistoryEntry(
-            date: date,
-            status: _AttendanceStatus.absent,
-            detail: 'Tanpa Keterangan',
-          );
-        default:
-          return _AttendanceHistoryEntry(
-            date: date,
-            status: _AttendanceStatus.present,
-            detail: '07:47:21 - 15:03:48',
-          );
-      }
-    }).toList();
+    if (checkIn.isNotEmpty) {
+      return _AttendanceHistoryEntry(
+        date: date,
+        status: _AttendanceStatus.present,
+        detail: 'Masuk - $checkIn',
+      );
+    }
+
+    return _AttendanceHistoryEntry(
+      date: date,
+      status: _AttendanceStatus.absent,
+      detail: 'Tanpa Keterangan',
+    );
   }
 
   Widget _buildAttendanceItem(_AttendanceHistoryEntry entry) {
@@ -153,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _profileFuture = getUser();
+    _attendanceHistoryFuture = _loadRecentHistory();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {
@@ -216,7 +220,6 @@ class _HomeScreenState extends State<HomeScreen> {
             final displayName = (profileName == null || profileName.isEmpty)
                 ? 'Pengguna'
                 : profileName;
-            final attendanceHistory = _attendanceHistory;
 
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
@@ -225,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -313,16 +316,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          DateFormat('HH:mm:ss').format(_currentDateTime),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColor.textPrimary,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
                           DateFormat(
                             'EEEE, d MMMM y',
                             'id_ID',
@@ -334,6 +327,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('HH:mm:ss').format(_currentDateTime),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColor.textPrimary,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+
                         const SizedBox(height: 16),
                         Divider(
                           height: 1,
@@ -359,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: AppColor.textPrimary,
-                                fontSize: 20,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -493,15 +497,66 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  for (
-                    var index = 0;
-                    index < attendanceHistory.length;
-                    index++
-                  ) ...[
-                    _buildAttendanceItem(attendanceHistory[index]),
-                    if (index != attendanceHistory.length - 1)
-                      const SizedBox(height: 12),
-                  ],
+                  FutureBuilder<List<_AttendanceHistoryEntry>>(
+                    future: _attendanceHistoryFuture,
+                    builder: (context, historySnapshot) {
+                      if (historySnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppColor.primary,
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (historySnapshot.hasError) {
+                        return Text(
+                          historySnapshot.error.toString(),
+                          style: const TextStyle(
+                            color: AppColor.error,
+                            fontSize: 12,
+                          ),
+                        );
+                      }
+
+                      final attendanceHistory = historySnapshot.data ?? [];
+                      if (attendanceHistory.isEmpty) {
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColor.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColor.border),
+                          ),
+                          child: const Text(
+                            'Belum ada riwayat 5 hari terakhir.',
+                            style: TextStyle(
+                              color: AppColor.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          for (
+                            var index = 0;
+                            index < attendanceHistory.length;
+                            index++
+                          ) ...[
+                            _buildAttendanceItem(attendanceHistory[index]),
+                            if (index != attendanceHistory.length - 1)
+                              const SizedBox(height: 12),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
                   if (snapshot.hasError) ...[
                     const SizedBox(height: 8),
                     Text(

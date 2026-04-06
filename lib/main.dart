@@ -29,7 +29,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Presenzo',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: AppColor.primary),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColor.primary),
+        scaffoldBackgroundColor: AppColor.backgroundLight,
         fontFamily: 'Inter',
         textTheme: const TextTheme().apply(
           bodyColor: AppColor.textPrimary,

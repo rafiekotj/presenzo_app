@@ -30,48 +30,45 @@ class _BottomNavbarState extends State<BottomNavbar> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: AppColor.shadowLight,
-                blurRadius: 6,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.fingerprint_outlined),
-                activeIcon: Icon(Icons.fingerprint),
-                label: 'Presensi',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profil',
-              ),
-            ],
-            currentIndex: _selectedIndex,
-            selectedItemColor: AppColor.primary,
-            unselectedItemColor: AppColor.textHint,
-            backgroundColor: AppColor.surface,
-            selectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: AppColor.shadowLight,
+              blurRadius: 6,
+              offset: const Offset(0, -2),
             ),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
-            onTap: _onItemTapped,
+          ],
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fingerprint_outlined),
+              activeIcon: Icon(Icons.fingerprint),
+              label: 'Presensi',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profil',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: AppColor.primary,
+          unselectedItemColor: AppColor.textHint,
+          backgroundColor: AppColor.surface,
+          selectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
           ),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
+          onTap: _onItemTapped,
         ),
       ),
     );

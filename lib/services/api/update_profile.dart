@@ -97,7 +97,9 @@ Future<List<ProfileOptionItem>> _getOptions({
 
   log(response.body);
   if (response.statusCode != 200) {
-    throw Exception('Gagal mengambil data $fallbackPrefix');
+    throw Exception(
+      'Gagal mengambil data $fallbackPrefix (${response.statusCode})',
+    );
   }
 
   final decoded = json.decode(response.body);
@@ -106,11 +108,17 @@ Future<List<ProfileOptionItem>> _getOptions({
   }
 
   final data = decoded['data'];
-  if (data is! List) {
+  final listData = data is List
+      ? data
+      : data is Map<String, dynamic>
+      ? (data['items'] ?? data['records'] ?? data['data'])
+      : null;
+
+  if (listData is! List) {
     return const [];
   }
 
-  return data
+  return listData
       .whereType<Map<String, dynamic>>()
       .map((item) {
         final idValue = item['id'];

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/models/attendance_model.dart';
 import 'package:presenzo_app/services/api/attendance.dart';
+import 'package:presenzo_app/services/storage/preference.dart';
 import 'package:presenzo_app/widgets/custom_text_field.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -22,7 +24,7 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final TextEditingController _reasonController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
-  final DateFormat _timeFormat = DateFormat('HH:mm:ss');
+  final DateFormat _timeFormat = DateFormat('HH:mm');
 
   Timer? _clockTimer;
   DateTime _now = DateTime.now();
@@ -32,7 +34,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   String _currentAddress = 'Lokasi belum tersedia';
 
   AttendanceRecord? _todayAttendance;
-  bool _sudahAbsenHariIni = false;
+  bool _hasTodayAttendance = false;
+  bool _canCheckoutToday = false;
+  bool _isIzinToday = false;
+  bool _isAttendanceCompletedToday = false;
 
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -48,7 +53,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         _now = DateTime.now();
       });
     });
+    _logActiveToken();
     _initializeData();
+  }
+
+  Future<void> _logActiveToken() async {
+    final token = await PreferenceHandler.getToken();
+    log('active_user_token=$token');
   }
 
   @override
@@ -75,7 +86,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Future<void> _loadAttendanceStatus() async {
     final attendanceDate = _dateFormat.format(DateTime.now());
     AttendanceRecord? todayAttendance;
-    bool sudahAbsen = false;
+    bool hasTodayAttendance = false;
+    bool canCheckoutToday = false;
+    bool isIzinToday = false;
+    bool isAttendanceCompletedToday = false;
 
     try {
       final todayResponse = await getTodayAttendance(
@@ -86,17 +100,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       todayAttendance = null;
     }
 
-    try {
-      final statsResponse = await getAttendanceStats();
-      sudahAbsen = statsResponse.data.sudahAbsenHariIni;
-    } catch (_) {
-      sudahAbsen = false;
-    }
-
     if (!mounted) return;
+
+    final status = (todayAttendance?.status ?? '').toLowerCase();
+    final hasCheckIn = (todayAttendance?.checkInTime ?? '').trim().isNotEmpty;
+    final hasCheckOut = (todayAttendance?.checkOutTime ?? '').trim().isNotEmpty;
+    hasTodayAttendance = todayAttendance != null;
+    isIzinToday = status == 'izin';
+    canCheckoutToday =
+        hasTodayAttendance && hasCheckIn && !hasCheckOut && !isIzinToday;
+    isAttendanceCompletedToday = isIzinToday || (hasCheckIn && hasCheckOut);
+
     setState(() {
       _todayAttendance = todayAttendance;
-      _sudahAbsenHariIni = sudahAbsen || todayAttendance != null;
+      _hasTodayAttendance = hasTodayAttendance;
+      _canCheckoutToday = canCheckoutToday;
+      _isIzinToday = isIzinToday;
+      _isAttendanceCompletedToday = isAttendanceCompletedToday;
     });
   }
 
@@ -187,16 +207,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Future<void> _submitAttendance() async {
     if (_isSubmitting) return;
 
-    if (_sudahAbsenHariIni) {
+    if (_isAttendanceCompletedToday) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Anda sudah melakukan presensi hari ini.'),
-        ),
+        const SnackBar(content: Text('Presensi hari ini sudah selesai.')),
       );
       return;
     }
 
-    if (_selectedMode == AttendanceMode.hadir && _currentPosition == null) {
+    if (_canCheckoutToday && _currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Lokasi belum siap. Silakan refresh lokasi.'),
@@ -222,7 +240,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final date = _dateFormat.format(now);
 
       late final AttendanceApiResponse response;
-      if (_selectedMode == AttendanceMode.hadir) {
+      if (_canCheckoutToday) {
+        response = await checkOutAttendance(
+          attendanceDate: date,
+          checkOut: _timeFormat.format(now),
+          checkOutLat: _currentPosition!.latitude,
+          checkOutLng: _currentPosition!.longitude,
+          checkOutAddress: _currentAddress,
+          status: 'pulang',
+        );
+      } else if (_selectedMode == AttendanceMode.hadir) {
         response = await checkInAttendance(
           attendanceDate: date,
           checkIn: _timeFormat.format(now),
@@ -263,7 +290,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   String get _statusLabel {
-    if (_sudahAbsenHariIni) {
+    if (_isIzinToday) {
+      return 'Sudah izin hari ini';
+    }
+
+    if ((_todayAttendance?.checkOutTime ?? '').trim().isNotEmpty) {
+      return 'Sudah check out hari ini';
+    }
+
+    if ((_todayAttendance?.checkInTime ?? '').trim().isNotEmpty) {
+      return 'Sudah check in hari ini';
+    }
+
+    if (_hasTodayAttendance) {
       if ((_todayAttendance?.status ?? '').toLowerCase() == 'izin') {
         return 'Sudah izin hari ini';
       }
@@ -274,10 +313,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Color get _statusColor {
-    if (_sudahAbsenHariIni) {
-      if ((_todayAttendance?.status ?? '').toLowerCase() == 'izin') {
-        return AppColor.warning;
-      }
+    if (_isIzinToday) {
+      return AppColor.warning;
+    }
+
+    if ((_todayAttendance?.checkOutTime ?? '').trim().isNotEmpty ||
+        (_todayAttendance?.checkInTime ?? '').trim().isNotEmpty) {
       return AppColor.success;
     }
     return AppColor.error;
@@ -288,7 +329,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final currentLatLng = _currentPosition == null
         ? const LatLng(-6.200000, 106.816666)
         : LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
-    final buttonLabel = _selectedMode == AttendanceMode.hadir
+    final buttonLabel = _canCheckoutToday
+        ? 'Check Out Sekarang'
+        : _selectedMode == AttendanceMode.hadir
         ? 'Check In Sekarang'
         : 'Ajukan Izin';
 
@@ -515,37 +558,57 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 10,
-                                children: [
-                                  ChoiceChip(
-                                    selected:
-                                        _selectedMode == AttendanceMode.hadir,
-                                    label: const Text('Hadir'),
-                                    onSelected: (_) {
-                                      setState(() {
-                                        _selectedMode = AttendanceMode.hadir;
-                                      });
-                                    },
+                              if (_canCheckoutToday) ...[
+                                const Text(
+                                  'Anda sudah check in. Silakan check out untuk menyelesaikan presensi hari ini.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColor.textSecondary,
+                                    height: 1.4,
                                   ),
-                                  ChoiceChip(
-                                    selected:
-                                        _selectedMode == AttendanceMode.izin,
-                                    label: const Text('Izin'),
-                                    onSelected: (_) {
-                                      setState(() {
-                                        _selectedMode = AttendanceMode.izin;
-                                      });
-                                    },
+                                ),
+                              ] else if (_isAttendanceCompletedToday) ...[
+                                const Text(
+                                  'Presensi hari ini sudah selesai.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColor.textSecondary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ] else ...[
+                                Wrap(
+                                  spacing: 10,
+                                  children: [
+                                    ChoiceChip(
+                                      selected:
+                                          _selectedMode == AttendanceMode.hadir,
+                                      label: const Text('Hadir'),
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _selectedMode = AttendanceMode.hadir;
+                                        });
+                                      },
+                                    ),
+                                    ChoiceChip(
+                                      selected:
+                                          _selectedMode == AttendanceMode.izin,
+                                      label: const Text('Izin'),
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _selectedMode = AttendanceMode.izin;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                if (_selectedMode == AttendanceMode.izin) ...[
+                                  const SizedBox(height: 8),
+                                  CustomTextField(
+                                    controller: _reasonController,
+                                    hintText: 'Alasan Izin',
                                   ),
                                 ],
-                              ),
-                              if (_selectedMode == AttendanceMode.izin) ...[
-                                const SizedBox(height: 8),
-                                CustomTextField(
-                                  controller: _reasonController,
-                                  hintText: 'Alasan Izin',
-                                ),
                               ],
                             ],
                           ),
@@ -555,7 +618,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton.icon(
-                            onPressed: (_isSubmitting || _sudahAbsenHariIni)
+                            onPressed:
+                                (_isSubmitting || _isAttendanceCompletedToday)
                                 ? null
                                 : _submitAttendance,
                             icon: _isSubmitting
