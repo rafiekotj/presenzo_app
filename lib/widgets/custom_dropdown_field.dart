@@ -17,6 +17,7 @@ class CustomDropdownField<TValue> extends StatefulWidget {
   final List<DropdownMenuItem<TValue>> items; // list pilihan
   final ValueChanged<TValue?>? onChanged; // callback saat pilihan berubah
   final String? Function(TValue?)? validator; // validasi
+  final bool isRequired; // jika true, harus dipilih (otomatis validasi)
   final bool isLoading; // loading state
   final String loadingText; // text saat loading
   final double menuMaxHeight; // max tinggi dropdown menu
@@ -30,6 +31,7 @@ class CustomDropdownField<TValue> extends StatefulWidget {
     required this.items,
     this.onChanged,
     this.validator,
+    this.isRequired = false,
     this.isLoading = false,
     this.loadingText = 'Memuat pilihan...',
     this.menuMaxHeight = 280,
@@ -49,6 +51,7 @@ class _CustomDropdownFieldState<TValue>
   final FocusNode _focusNode = FocusNode(); // track focus state
   String? _errorText; // error message
   double? _menuWidth; // dropdown menu width (same as field)
+  bool _hasInteracted = false; // track apakah user sudah interact
 
   @override
   void initState() {
@@ -63,6 +66,25 @@ class _CustomDropdownFieldState<TValue>
   void _handleFocusChange() {
     if (mounted) {
       setState(() {});
+      // Mark sebagai sudah interact saat focus
+      if (_focusNode.hasFocus && !_hasInteracted) {
+        _hasInteracted = true;
+      }
+      // Auto-validate saat focus hilang (hanya jika sudah interact)
+      if (!_focusNode.hasFocus &&
+          _hasInteracted &&
+          (widget.validator != null || widget.isRequired)) {
+        setState(() {
+          if (widget.validator != null) {
+            _errorText = widget.validator?.call(_selectedValueNotifier.value);
+          } else if (widget.isRequired &&
+              _selectedValueNotifier.value == null) {
+            _errorText = "Harus dipilih";
+          } else {
+            _errorText = null;
+          }
+        });
+      }
     }
   }
 
@@ -71,6 +93,19 @@ class _CustomDropdownFieldState<TValue>
     super.didUpdateWidget(oldWidget);
     if (widget.selectedValue != oldWidget.selectedValue) {
       _selectedValueNotifier.value = widget.selectedValue;
+    }
+    // Hapus error dan reset interaction flag saat loading selesai
+    if (oldWidget.isLoading && !widget.isLoading) {
+      setState(() {
+        _errorText = null;
+        _hasInteracted = false;
+      });
+    }
+    // Hapus error saat items berubah
+    if (oldWidget.items.length != widget.items.length) {
+      setState(() {
+        _errorText = null;
+      });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateMenuWidth();
@@ -101,10 +136,36 @@ class _CustomDropdownFieldState<TValue>
   void _validateAndUpdate(TValue? value) {
     // Update selected value, validasi, dan trigger callback
     _selectedValueNotifier.value = value;
+    _hasInteracted = true; // Mark sebagai sudah interact
     setState(() {
-      _errorText = widget.validator?.call(value);
+      // Validasi dengan custom validator atau isRequired (hanya jika sudah interact)
+      if (_hasInteracted) {
+        if (widget.validator != null) {
+          _errorText = widget.validator?.call(value);
+        } else if (widget.isRequired && value == null) {
+          _errorText = "Harus dipilih";
+        } else {
+          _errorText = null;
+        }
+      }
     });
     widget.onChanged?.call(value);
+  }
+
+  /// Public method untuk validasi - bisa dipanggil dari parent widget
+  /// Gunakan saat form submission untuk validasi semua field
+  String? validate() {
+    _hasInteracted = true; // Mark sebagai sudah interact saat submit
+    String? error;
+    if (widget.validator != null) {
+      error = widget.validator?.call(_selectedValueNotifier.value);
+    } else if (widget.isRequired && _selectedValueNotifier.value == null) {
+      error = "Harus dipilih";
+    }
+    setState(() {
+      _errorText = error;
+    });
+    return error;
   }
 
   @override
@@ -144,14 +205,18 @@ class _CustomDropdownFieldState<TValue>
   @override
   Widget build(BuildContext context) {
     // ==================== SETUP VARIABLES ====================
-    final hasError = _errorText != null && _errorText!.isNotEmpty;
+    final hasError =
+        _hasInteracted &&
+        !widget.isLoading &&
+        _errorText != null &&
+        _errorText!.isNotEmpty;
     final dropdownItems = _convertToDropdownItems();
     const horizontalFieldPadding = 12.0;
     const prefixIconSize = 20.0;
     const prefixGap = 12.0;
-    const dropdownYOffset = -16.0;
+    const dropdownYOffset = -15.0;
     const dropdownXOffset =
-        -(horizontalFieldPadding + prefixIconSize + prefixGap);
+        -(horizontalFieldPadding + prefixIconSize + prefixGap - 8.0);
 
     // Cek apakah dropdown harus floating (focus atau ada value)
     final isFloating =
@@ -173,7 +238,7 @@ class _CustomDropdownFieldState<TValue>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: hasError
-                    ? AppColor.error
+                    ? Colors.red
                     : _focusNode.hasFocus
                     ? AppColor.secondary
                     : AppColor.textHint,
@@ -197,7 +262,7 @@ class _CustomDropdownFieldState<TValue>
                     curve: Curves.easeOut,
                     style: TextStyle(
                       color: hasError
-                          ? AppColor.error
+                          ? Colors.red
                           : _focusNode.hasFocus
                           ? AppColor.secondary
                           : AppColor.textHint,
@@ -221,7 +286,7 @@ class _CustomDropdownFieldState<TValue>
                         widget.prefixIcon,
                         size: 20,
                         color: hasError
-                            ? AppColor.error
+                            ? Colors.red
                             : _focusNode.hasFocus
                             ? AppColor.primary
                             : AppColor.textHint,
@@ -305,42 +370,49 @@ class _CustomDropdownFieldState<TValue>
                               vertical: 8,
                             ),
                           ),
-                          hint: Text(
-                            widget.isLoading ? widget.loadingText : '',
-                            style: const TextStyle(
-                              color: AppColor.textHint,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          hint: const SizedBox(),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Positioned(
-                  right: 12,
-                  top: 0,
-                  bottom: 0,
-                  child: SizedBox(
-                    height: 28,
+                if (widget.isLoading)
+                  Positioned.fill(
                     child: Center(
-                      child: Icon(
-                        _focusNode.hasFocus
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
-                        size: 20,
-                        color: hasError
-                            ? AppColor.error
-                            : _focusNode.hasFocus
-                            ? AppColor.primary
-                            : AppColor.textHint,
+                      child: SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColor.secondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Positioned(
+                    right: 12,
+                    top: 0,
+                    bottom: 0,
+                    child: SizedBox(
+                      height: 28,
+                      child: Center(
+                        child: Icon(
+                          _focusNode.hasFocus
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: hasError
+                              ? Colors.red
+                              : _focusNode.hasFocus
+                              ? AppColor.primary
+                              : AppColor.textHint,
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -348,14 +420,16 @@ class _CustomDropdownFieldState<TValue>
         if (hasError) ...[
           const SizedBox(height: 6),
           Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsets.only(left: 4),
             child: Text(
               _errorText!,
               style: const TextStyle(
-                color: AppColor.error,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+                color: Colors.red,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

@@ -161,30 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 12,
-                                  bottom: 16,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      context.push(
-                                        const ForgotPasswordScreen(),
-                                      );
-                                    },
-                                    child: const Text(
-                                      'Lupa kata sandi?',
-                                      style: TextStyle(
-                                        color: AppColor.primary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              const SizedBox(height: 12),
                               CustomButton(
                                 text: 'Masuk',
                                 isLoading: isLoading,
@@ -243,6 +220,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                     );
                                   }
                                 },
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      context.push(
+                                        const ForgotPasswordScreen(),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Lupa kata sandi?',
+                                      style: TextStyle(
+                                        color: AppColor.primary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),

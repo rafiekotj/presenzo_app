@@ -24,6 +24,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // GlobalKey untuk dropdown
+  late final GlobalKey<State<CustomDropdownField<int>>> _trainingDropdownKey =
+      GlobalKey();
+  late final GlobalKey<State<CustomDropdownField<int>>> _batchDropdownKey =
+      GlobalKey();
+  late final GlobalKey<State<CustomDropdownField<String>>> _genderDropdownKey =
+      GlobalKey();
+
   bool isVisibility = true;
   bool isLoading = false;
   bool isLoadingOptions = true;
@@ -231,10 +239,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               const SizedBox(height: 10),
                               CustomDropdownField<String>(
+                                key: _genderDropdownKey,
                                 selectedValue: selectedGender,
                                 hintText: 'Pilih Jenis Kelamin',
                                 prefixIcon: Icons.wc_outlined,
                                 menuMaxHeight: 220,
+                                isRequired: true,
                                 items: const [
                                   DropdownMenuItem<String>(
                                     value: 'L',
@@ -260,21 +270,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     selectedGender = value;
                                   });
                                 },
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Jenis kelamin wajib dipilih';
-                                  }
-                                  return null;
-                                },
                               ),
                               const SizedBox(height: 10),
                               CustomDropdownField<int>(
+                                key: _batchDropdownKey,
                                 selectedValue: selectedBatchId,
                                 hintText: 'Pilih Batch',
                                 prefixIcon: Icons.groups_outlined,
                                 menuMaxHeight: 280,
                                 isLoading: isLoadingOptions,
                                 loadingText: 'Memuat batch...',
+                                isRequired: true,
                                 items: isLoadingOptions
                                     ? const [
                                         DropdownMenuItem<int>(
@@ -295,21 +301,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           selectedBatchId = value;
                                         });
                                       },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'Batch wajib dipilih';
-                                  }
-                                  return null;
-                                },
                               ),
                               const SizedBox(height: 10),
                               CustomDropdownField<int>(
+                                key: _trainingDropdownKey,
                                 selectedValue: selectedTrainingId,
                                 hintText: 'Pilih Jurusan',
                                 prefixIcon: Icons.school_outlined,
                                 menuMaxHeight: 280,
                                 isLoading: isLoadingOptions,
                                 loadingText: 'Memuat jurusan...',
+                                isRequired: true,
                                 items: isLoadingOptions
                                     ? const [
                                         DropdownMenuItem<int>(
@@ -330,12 +332,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           selectedTrainingId = value;
                                         });
                                       },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'Jurusan wajib dipilih';
-                                  }
-                                  return null;
-                                },
                               ),
                               const SizedBox(height: 20),
                               CustomButton(
@@ -353,22 +349,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     return;
                                   }
 
+                                  // Validasi text field
                                   if (!_formKey.currentState!.validate()) {
                                     return;
                                   }
 
-                                  if (selectedTrainingId == null ||
-                                      selectedBatchId == null ||
-                                      selectedGender == null ||
-                                      selectedGender!.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Jurusan, batch, dan jenis kelamin wajib dipilih.',
-                                        ),
-                                      ),
-                                    );
-                                    return;
+                                  // Validasi dropdown dengan memanggil validate()
+                                  final genderError =
+                                      (_genderDropdownKey.currentState
+                                              as dynamic)
+                                          ?.validate();
+                                  final batchError =
+                                      (_batchDropdownKey.currentState
+                                              as dynamic)
+                                          ?.validate();
+                                  final trainingError =
+                                      (_trainingDropdownKey.currentState
+                                              as dynamic)
+                                          ?.validate();
+
+                                  if (genderError != null ||
+                                      batchError != null ||
+                                      trainingError != null) {
+                                    return; // Ada error di dropdown, tidak submit
                                   }
 
                                   setState(() {

@@ -20,6 +20,7 @@ class CustomTextField extends StatefulWidget {
   final bool? enableSuggestions;
   final bool? autocorrect;
   final String? Function(String?)? validator;
+  final EdgeInsets? errorPadding; // Custom padding untuk error text
 
   const CustomTextField({
     super.key,
@@ -33,6 +34,7 @@ class CustomTextField extends StatefulWidget {
     this.enableSuggestions,
     this.autocorrect,
     this.validator,
+    this.errorPadding,
   });
 
   @override
@@ -41,6 +43,7 @@ class CustomTextField extends StatefulWidget {
 
 class _CustomTextFieldState extends State<CustomTextField> {
   final FocusNode _focusNode = FocusNode();
+  String? _errorText;
 
   // ==================== FLOATING LABEL LOGIC ====================
   /// Cek apakah label harus float ke atas
@@ -91,159 +94,177 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     final floatLabel = _isFloating;
-    final borderColor = _focusNode.hasFocus
+    final hasError = _errorText != null && _errorText!.isNotEmpty;
+    final borderColor = hasError
+        ? Colors.red
+        : _focusNode.hasFocus
         ? AppColor.secondary
         : AppColor.textHint;
-    final labelColor = _focusNode.hasFocus
+    final labelColor = hasError
+        ? Colors.red
+        : _focusNode.hasFocus
         ? AppColor.secondary
+        : AppColor.textHint;
+    final iconColor = hasError
+        ? Colors.red
+        : _focusNode.hasFocus
+        ? AppColor.primary
         : AppColor.textHint;
 
-    // ==================== GESTURE DETECTOR ====================
-    // Membuat seluruh area field bisa diklik untuk trigger focus
-    return GestureDetector(
-      onTap: () {
-        _focusNode.requestFocus();
-      },
-      child: Container(
-        // ==================== CONTAINER & BORDER ====================
-        // Background field dengan border yang berubah saat focus
-        decoration: BoxDecoration(
-          color: AppColor.fieldFill,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // ==================== FLOATING LABEL ====================
-            // Label yang animasi naik dari top:20 (unfocus) -> top:4 (focus)
-            // Juga berubah ukuran: 14 -> 11 dan warna berubah follow focus
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              left: 44,
-              top: floatLabel ? 10 : 20,
-              child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                style: TextStyle(
-                  color: labelColor,
-                  fontSize: floatLabel ? 11 : 14,
-                  fontWeight: FontWeight.w600,
-                ),
-                child: Text(widget.hintText),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () {
+            _focusNode.requestFocus();
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColor.fieldFill,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor, width: 1),
             ),
-            // ==================== PREFIX ICON ====================
-            // Icon di sebelah kiri - FIXED position (tidak bergerak saat focus)
-            // Warna icon: textHint (normal) -> primary (focus)
-            // Positioned top:0 bottom:0 membuat icon selalu center vertikal
-            if (widget.prefixIcon != null)
-              Positioned(
-                left: 12,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: SizedBox(
-                    height: 28,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // ==================== FLOATING LABEL ====================
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  left: 44,
+                  top: floatLabel ? 10 : 20,
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontSize: floatLabel ? 11 : 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    child: Text(widget.hintText),
+                  ),
+                ),
+                // ==================== PREFIX ICON ====================
+                if (widget.prefixIcon != null)
+                  Positioned(
+                    left: 12,
+                    top: 0,
+                    bottom: 0,
                     child: Center(
-                      child: Icon(
-                        widget.prefixIcon,
-                        size: 20,
-                        color: _focusNode.hasFocus
-                            ? AppColor.primary
-                            : AppColor.textHint,
+                      child: SizedBox(
+                        height: 28,
+                        child: Center(
+                          child: Icon(
+                            widget.prefixIcon,
+                            size: 20,
+                            color: iconColor,
+                          ),
+                        ),
                       ),
                     ),
+                  ),
+                // ==================== INPUT AREA ====================
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: widget.prefixIcon != null ? 44 : 12,
+                    right: widget.suffixIcon != null ? 44 : 12,
+                    top: floatLabel ? 17 : 14,
+                    bottom: floatLabel ? 11 : 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 28,
+                          child: TextFormField(
+                            focusNode: _focusNode,
+                            controller: widget.controller,
+                            cursorColor: AppColor.textHint,
+                            cursorHeight: 20,
+                            obscureText: widget.obscureText,
+                            obscuringCharacter: '•',
+                            readOnly: widget.readOnly,
+                            keyboardType: widget.keyboardType,
+                            enableSuggestions:
+                                widget.enableSuggestions ?? !widget.obscureText,
+                            autocorrect:
+                                widget.autocorrect ?? !widget.obscureText,
+                            smartDashesType: SmartDashesType.disabled,
+                            smartQuotesType: SmartQuotesType.disabled,
+                            textAlignVertical: TextAlignVertical.center,
+                            strutStyle: const StrutStyle(
+                              fontSize: 14,
+                              height: 1.2,
+                              forceStrutHeight: true,
+                            ),
+                            style: const TextStyle(
+                              color: AppColor.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                            ),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.only(top: 8),
+                              counterText: '',
+                            ),
+                            validator: (value) {
+                              final error = widget.validator?.call(value);
+                              if (mounted) {
+                                setState(() {
+                                  _errorText = error;
+                                });
+                              }
+                              return null; // return null agar error tidak ditampilkan TextFormField
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            // ==================== INPUT AREA ====================
-            // Padding: 28px total height = top (17 or 14) + bottom (11 or 14)
-            // - Saat focus: top:17 + bottom:11 = 28px
-            // - Saat unfocus: top:14 + bottom:14 = 28px (konsisten!)
-            // Left: 44px jika ada icon, 12px jika tidak
-            Padding(
-              padding: EdgeInsets.only(
-                left: widget.prefixIcon != null ? 44 : 12,
-                right: widget.suffixIcon != null ? 44 : 12,
-                top: floatLabel ? 17 : 14,
-                bottom: floatLabel ? 11 : 14,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    // ==================== TEXTFORMFIELD ====================
-                    // Text input utama dengan styling:
-                    // - cursorHeight: 20 (lebih tinggi & visible)
-                    // - height: 1.4 (line height untuk spacing teks)
-                    // - textAlignVertical: center (vertikal center)
-                    // - Border: none (styling dilakukan di outer container)
-                    child: SizedBox(
-                      height: 28,
-                      child: TextFormField(
-                        focusNode: _focusNode,
-                        controller: widget.controller,
-                        cursorColor: AppColor.textHint,
-                        cursorHeight: 20,
-                        obscureText: widget.obscureText,
-                        obscuringCharacter: '•',
-                        readOnly: widget.readOnly,
-                        keyboardType: widget.keyboardType,
-                        enableSuggestions:
-                            widget.enableSuggestions ?? !widget.obscureText,
-                        autocorrect: widget.autocorrect ?? !widget.obscureText,
-                        smartDashesType: SmartDashesType.disabled,
-                        smartQuotesType: SmartQuotesType.disabled,
-                        textAlignVertical: TextAlignVertical.center,
-                        strutStyle: const StrutStyle(
-                          fontSize: 14,
-                          height: 1.2,
-                          forceStrutHeight: true,
+                // ==================== SUFFIX ICON ====================
+                if (widget.suffixIcon != null)
+                  Positioned(
+                    right: 12,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: SizedBox(
+                        height: 28,
+                        child: IconTheme(
+                          data: const IconThemeData(color: AppColor.textHint),
+                          child: Center(child: widget.suffixIcon!),
                         ),
-                        style: const TextStyle(
-                          color: AppColor.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.only(top: 8),
-                          counterText: '',
-                        ),
-                        validator: widget.validator,
                       ),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-            // ==================== SUFFIX ICON ====================
-            // Dibuat FIXED position seperti prefix agar tidak ikut geser saat focus/unfocus
-            if (widget.suffixIcon != null)
-              Positioned(
-                right: 12,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: SizedBox(
-                    height: 28,
-                    child: IconTheme(
-                      data: const IconThemeData(color: AppColor.textHint),
-                      child: Center(child: widget.suffixIcon!),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
-      ),
+        // ==================== ERROR TEXT (BAWAH FIELD) ====================
+        if (_errorText != null && _errorText!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 4),
+            child: Text(
+              _errorText!,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
     );
   }
 }
