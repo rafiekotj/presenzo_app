@@ -263,6 +263,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           content: Text('Profil berhasil diperbarui.'),
         ),
       );
+
+      // Pop with true to indicate successful update
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

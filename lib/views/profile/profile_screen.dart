@@ -17,12 +17,18 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final Future<GetUserModel?> _profileFuture;
+  late Future<GetUserModel?> _profileFuture;
 
   @override
   void initState() {
     super.initState();
     _profileFuture = getUser();
+  }
+
+  void _refreshProfile() {
+    setState(() {
+      _profileFuture = getUser();
+    });
   }
 
   ImageProvider? _buildAvatarProvider(String? photoUrl) {
@@ -191,8 +197,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 SizedBox(
                   height: 48,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.push(const ProfileEditScreen());
+                    onPressed: () async {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute<bool>(
+                          builder: (_) => const ProfileEditScreen(),
+                        ),
+                      );
+                      // Refresh profile if edit was successful
+                      if (result == true && mounted) {
+                        _refreshProfile();
+                      }
                     },
                     icon: const Icon(Icons.edit_outlined),
                     label: const Text('Edit Profil'),
