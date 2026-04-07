@@ -67,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ? AppColor.backgroundDark
         : AppColor.backgroundLight;
     final surfaceColor = isDark ? const Color(0xFF1E293B) : AppColor.surface;
-    final textPrimary = isDark ? Colors.white : AppColor.textPrimary;
+    final textPrimary = isDark ? AppColor.surface : AppColor.textPrimary;
     final textSecondary = isDark
         ? const Color(0xFFCBD5E1)
         : AppColor.textSecondary;

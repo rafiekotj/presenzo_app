@@ -96,17 +96,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final floatLabel = _isFloating;
     final hasError = _errorText != null && _errorText!.isNotEmpty;
     final borderColor = hasError
-        ? Colors.red
+        ? AppColor.error
         : _focusNode.hasFocus
         ? AppColor.secondary
         : AppColor.textHint;
     final labelColor = hasError
-        ? Colors.red
+        ? AppColor.error
         : _focusNode.hasFocus
         ? AppColor.secondary
         : AppColor.textHint;
     final iconColor = hasError
-        ? Colors.red
+        ? AppColor.error
         : _focusNode.hasFocus
         ? AppColor.primary
         : AppColor.textHint;
@@ -256,7 +256,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             child: Text(
               _errorText!,
               style: const TextStyle(
-                color: Colors.red,
+                color: AppColor.error,
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
               ),

@@ -238,7 +238,7 @@ class _CustomDropdownFieldState<TValue>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: hasError
-                    ? Colors.red
+                    ? AppColor.error
                     : _focusNode.hasFocus
                     ? AppColor.secondary
                     : AppColor.textHint,
@@ -262,7 +262,7 @@ class _CustomDropdownFieldState<TValue>
                     curve: Curves.easeOut,
                     style: TextStyle(
                       color: hasError
-                          ? Colors.red
+                          ? AppColor.error
                           : _focusNode.hasFocus
                           ? AppColor.secondary
                           : AppColor.textHint,
@@ -286,7 +286,7 @@ class _CustomDropdownFieldState<TValue>
                         widget.prefixIcon,
                         size: 20,
                         color: hasError
-                            ? Colors.red
+                            ? AppColor.error
                             : _focusNode.hasFocus
                             ? AppColor.primary
                             : AppColor.textHint,
@@ -405,7 +405,7 @@ class _CustomDropdownFieldState<TValue>
                               : Icons.keyboard_arrow_down_rounded,
                           size: 20,
                           color: hasError
-                              ? Colors.red
+                              ? AppColor.error
                               : _focusNode.hasFocus
                               ? AppColor.primary
                               : AppColor.textHint,
@@ -424,7 +424,7 @@ class _CustomDropdownFieldState<TValue>
             child: Text(
               _errorText!,
               style: const TextStyle(
-                color: Colors.red,
+                color: AppColor.error,
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
               ),

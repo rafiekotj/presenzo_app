@@ -401,7 +401,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                               width: 32,
                                               height: 32,
                                               decoration: BoxDecoration(
-                                                color: Colors.white,
+                                                color: AppColor.surface,
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
                                                   color: AppColor.primarySoft,

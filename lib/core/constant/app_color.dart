@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
 
 class AppColor {
-  // Primary
-  static const Color primary = Color(0xFF2F6BFF);
-  static const Color secondary = Color(0xFF1D4ED8);
-  static const Color primarySoft = Color(0xFFE0E7FF);
+  // Primary (teal-green based)
+  static const Color primary = Color(0xFF1E6F5C);
+  static const Color secondary = Color(0xFF185A4A); // lebih gelap
+  static const Color primarySoft = Color(0xFFD1FAE5); // soft mint
 
   // Background
-  static const Color backgroundLight = Color(0xFFFCFDFE);
-  static const Color backgroundDark = Color(0xFF0F172A);
+  static const Color backgroundLight = Color(0xFFFCFDFD);
+  static const Color backgroundDark = Color(0xFF0B1F1A);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color fieldFill = Color(0xFFF1F5F9);
+  static const Color fieldFill = Color(0xFFF0FDF9);
 
   // Text
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textHint = Color(0xFF94A3B8);
+  static const Color textPrimary = Color(0xFF0F2A25);
+  static const Color textSecondary = Color(0xFF4B6B65);
+  static const Color textHint = Color(0xFF7FA9A1);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // Border
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color divider = Color(0xFFCBD5E1);
+  static const Color border = Color(0xFFD1E5E0);
+  static const Color divider = Color(0xFFA7C7C0);
 
   // Shadow
-  static const Color shadowLight = Color(0x0D000000); // 5% black
-  static const Color shadowMedium = Color(0x1A000000); // 10% black
+  static const Color shadowLight = Color(0x0D000000); // 5%
+  static const Color shadowMedium = Color(0x1A000000); // 10%
 
   // Status
   static const Color success = Color(0xFF16A34A);
