@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -12,6 +10,7 @@ import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/models/attendance_model.dart';
 import 'package:presenzo_app/services/api/attendance.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
+import 'package:presenzo_app/views/home/home_screen.dart';
 import 'package:presenzo_app/widgets/custom_text_field.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -273,6 +272,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(response.message)));
+
+      // Refresh HomeScreen data before popping
+      HomeScreen.refresh();
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -483,17 +485,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     ),
                                     myLocationEnabled: true,
                                     myLocationButtonEnabled: true,
-                                    zoomControlsEnabled: false,
-                                    scrollGesturesEnabled: true,
-                                    zoomGesturesEnabled: true,
-                                    rotateGesturesEnabled: true,
-                                    tiltGesturesEnabled: false,
-                                    gestureRecognizers:
-                                        <Factory<OneSequenceGestureRecognizer>>{
-                                          Factory<OneSequenceGestureRecognizer>(
-                                            () => EagerGestureRecognizer(),
-                                          ),
-                                        },
+                                    zoomControlsEnabled: true,
                                     onMapCreated: (controller) {
                                       _mapController = controller;
                                       final position = _currentPosition;

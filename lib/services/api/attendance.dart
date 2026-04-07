@@ -146,11 +146,14 @@ Future<AttendanceApiResponse> getTodayAttendance({
   );
 }
 
-Future<AttendanceStatsResponse> getAttendanceStats() async {
+Future<AttendanceStatsResponse> getAttendanceStats({
+  required String startDate,
+  required String endDate,
+}) async {
   final token = await PreferenceHandler.getToken();
 
   final response = await http.get(
-    Uri.parse(Endpoint.absenStats),
+    Uri.parse('${Endpoint.absenStats}?start=$startDate&end=$endDate'),
     headers: {
       'Accept': 'application/json',
       'Authorization': 'Bearer ${token ?? ''}',
@@ -232,4 +235,29 @@ Future<List<AttendanceRecord>> getAttendanceHistory({
   }
 
   return records;
+}
+
+Future<AttendanceApiResponse> deleteAttendance({required int id}) async {
+  final token = await PreferenceHandler.getToken();
+  final response = await http.delete(
+    Uri.parse(Endpoint.absenById(id.toString())),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${token ?? ''}',
+    },
+  );
+
+  log(response.body);
+  final parsed = AttendanceApiResponse.fromJson(
+    jsonDecode(response.body) as Map<String, dynamic>,
+  );
+
+  if (response.statusCode == 200) {
+    return parsed;
+  }
+
+  throw Exception(
+    parsed.message.isEmpty ? 'Gagal menghapus absensi' : parsed.message,
+  );
 }

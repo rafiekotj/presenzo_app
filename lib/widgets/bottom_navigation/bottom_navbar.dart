@@ -14,22 +14,20 @@ class BottomNavbar extends StatefulWidget {
 class _BottomNavbarState extends State<BottomNavbar> {
   int _selectedIndex = 0;
 
-  late final List<Widget> _widgetOptions = <Widget>[
-    const HomeScreen(),
-    const AttendanceScreen(),
-    const ProfileScreen(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    // Refresh HomeScreen data ketika tab Home dipilih
+    if (index == 0) {
+      HomeScreen.refresh();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
+      body: _buildBody(),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -72,5 +70,18 @@ class _BottomNavbarState extends State<BottomNavbar> {
         ),
       ),
     );
+  }
+
+  Widget _buildBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return const HomeScreen();
+      case 1:
+        return const AttendanceScreen();
+      case 2:
+        return const ProfileScreen();
+      default:
+        return const HomeScreen();
+    }
   }
 }

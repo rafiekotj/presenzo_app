@@ -194,6 +194,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                       await PreferenceHandler().storingIsLogin(
                                         true,
                                       );
+                                      // Store user creation date
+                                      if (login?.data?.user?.createdAt !=
+                                          null) {
+                                        await PreferenceHandler()
+                                            .storingUserCreatedAt(
+                                              login!.data!.user!.createdAt!,
+                                            );
+                                      }
                                     }
                                   } catch (e) {
                                     log(e.toString());

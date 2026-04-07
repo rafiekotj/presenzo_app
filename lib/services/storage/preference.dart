@@ -13,6 +13,7 @@ class PreferenceHandler {
   //Key user
   static const String _isLogin = 'isLogin';
   static const String _token = 'token';
+  static const String _userCreatedAt = 'userCreatedAt';
   static const String _isDarkMode = 'isDarkMode';
 
   //CREATE
@@ -24,6 +25,10 @@ class PreferenceHandler {
   Future<void> storingToken(String token) async {
     // final prefs = await SharedPreferences.getInstance();
     _preferences.setString(_token, token);
+  }
+
+  Future<void> storingUserCreatedAt(String createdAt) async {
+    _preferences.setString(_userCreatedAt, createdAt);
   }
 
   Future<void> storingIsDarkMode(bool isDarkMode) async {
@@ -43,6 +48,11 @@ class PreferenceHandler {
 
     var data = prefs.getString(_token);
     return data;
+  }
+
+  static Future<String?> getUserCreatedAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userCreatedAt);
   }
 
   static Future<bool?> getIsDarkMode() async {
@@ -65,5 +75,6 @@ class PreferenceHandler {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_isLogin);
     await prefs.remove(_token);
+    await prefs.remove(_userCreatedAt);
   }
 }
