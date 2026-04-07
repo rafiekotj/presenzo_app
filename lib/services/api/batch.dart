@@ -12,6 +12,7 @@ class BatchOptionItem {
   const BatchOptionItem({required this.id, required this.label});
 }
 
+// Mengambil daftar batch dari server lalu mengubahnya ke format pilihan dropdown.
 Future<List<BatchOptionItem>> getBatches() async {
   final token = await PreferenceHandler.getToken();
   final headers = <String, String>{"Accept": "application/json"};
@@ -61,6 +62,7 @@ Future<List<BatchOptionItem>> getBatches() async {
       .toList();
 }
 
+// Membaca nama batch dari beberapa kemungkinan key respons API.
 String? _readLabel(Map<String, dynamic> item) {
   const candidates = ['name', 'nama', 'batch_name', 'batch_ke'];
 

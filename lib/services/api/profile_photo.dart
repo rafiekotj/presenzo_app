@@ -6,6 +6,7 @@ import 'package:presenzo_app/models/get_model.dart';
 import 'package:presenzo_app/services/api/endpoint.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
 
+// Mengunggah foto profil baru dalam format base64 ke endpoint profil.
 Future<GetUserModel?> updateProfilePhotoBase64({
   required String base64Image,
 }) async {

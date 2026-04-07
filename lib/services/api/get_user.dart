@@ -6,6 +6,7 @@ import 'package:presenzo_app/models/get_model.dart';
 import 'package:presenzo_app/services/api/endpoint.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
 
+// Mengambil data profil user yang sedang login menggunakan token autentikasi.
 Future<GetUserModel?> getUser() async {
   final token = await PreferenceHandler.getToken();
   final response = await http.get(

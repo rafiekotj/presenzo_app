@@ -158,15 +158,23 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   _AttendanceHistoryEntry _convertToHistoryEntry(AttendanceRecord record) {
     final date =
         DateTime.tryParse(record.attendanceDate ?? '') ?? DateTime.now();
-    final status = _mapStatusToEnum(record.status);
+    var status = _mapStatusToEnum(record.status);
 
     String detail = '';
     if (record.status == 'izin') {
       detail = 'Izin - ${record.alasanIzin ?? 'Tidak ada keterangan'}';
     } else if (record.checkInTime != null) {
-      detail = 'Masuk - ${record.checkInTime}';
+      // Check if check-in is late (after 08:00)
+      if (record.status == 'masuk' && _isCheckInLate(record.checkInTime!)) {
+        status = _AttendanceStatus.late;
+      }
+
       if (record.checkOutTime != null) {
-        detail = 'Keluar - ${record.checkOutTime}';
+        // Tampilkan jam masuk dan jam keluar seperti home screen
+        detail = '${record.checkInTime} - ${record.checkOutTime}';
+      } else {
+        // Hanya jam masuk
+        detail = 'Masuk - ${record.checkInTime}';
       }
     } else {
       detail = 'Tanpa Keterangan';
@@ -196,6 +204,22 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  bool _isCheckInLate(String checkInTime) {
+    try {
+      // Parse time format HH:mm:ss or HH:mm
+      final parts = checkInTime.split(':');
+      if (parts.length < 2) return false;
+
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+
+      // 08:00:00 = jam 8 pagi, jadi late jika > 08:00
+      return hour > 8 || (hour == 8 && minute > 0);
+    } catch (_) {
+      return false;
+    }
+  }
+
   Widget _buildAttendanceItem(_AttendanceHistoryEntry entry) {
     final formattedDate = DateFormat(
       'EEEE, d MMMM y',
@@ -218,26 +242,30 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColor.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColor.border.withValues(alpha: 0.75)),
-          boxShadow: const [
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: entry.color.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A0F172A),
-              blurRadius: 16,
-              offset: Offset(0, 6),
+              color: entry.color.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: entry.color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(16),
+                color: entry.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: entry.color.withValues(alpha: 0.2)),
               ),
-              child: Icon(entry.icon, color: entry.color, size: 24),
+              child: Icon(entry.icon, color: entry.color, size: 26),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -250,31 +278,36 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: AppColor.textPrimary,
+                      letterSpacing: 0.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     entry.detail,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                       color: AppColor.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: entry.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(1000),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: entry.color.withValues(alpha: 0.2)),
               ),
               child: Text(
                 entry.statusLabel,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: entry.color,
+                  letterSpacing: 0.3,
                 ),
               ),
             ),
@@ -408,7 +441,7 @@ class _AttendanceHistoryEntry {
       case _AttendanceStatus.leave:
         return AppColor.warning;
       case _AttendanceStatus.late:
-        return AppColor.secondary;
+        return AppColor.success;
       case _AttendanceStatus.absent:
         return AppColor.error;
     }
@@ -421,7 +454,7 @@ class _AttendanceHistoryEntry {
       case _AttendanceStatus.leave:
         return Icons.event_busy_rounded;
       case _AttendanceStatus.late:
-        return Icons.schedule_rounded;
+        return Icons.access_time_rounded;
       case _AttendanceStatus.absent:
         return Icons.cancel_rounded;
     }

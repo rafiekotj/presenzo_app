@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:presenzo_app/models/login_model.dart';
 import 'package:presenzo_app/services/api/endpoint.dart';
 
+// Mengirim email dan password ke server untuk proses login user.
 Future<LoginModel?> loginUser({
   required String email,
   required String password,

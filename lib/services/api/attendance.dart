@@ -6,6 +6,7 @@ import 'package:presenzo_app/models/attendance_model.dart';
 import 'package:presenzo_app/services/api/endpoint.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
 
+// Mengirim data check-in absensi ke server sesuai tanggal, lokasi, dan status user.
 Future<AttendanceApiResponse> checkInAttendance({
   required String attendanceDate,
   required String checkIn,
@@ -47,6 +48,7 @@ Future<AttendanceApiResponse> checkInAttendance({
   throw Exception(parsed.message.isEmpty ? 'Gagal check in' : parsed.message);
 }
 
+// Mengirim data check-out absensi ke server sesuai tanggal, lokasi, dan status user.
 Future<AttendanceApiResponse> checkOutAttendance({
   required String attendanceDate,
   required String checkOut,
@@ -85,6 +87,7 @@ Future<AttendanceApiResponse> checkOutAttendance({
   throw Exception(parsed.message.isEmpty ? 'Gagal check out' : parsed.message);
 }
 
+// Mengirim pengajuan izin untuk tanggal tertentu beserta alasan izin user.
 Future<AttendanceApiResponse> submitIzin({
   required String date,
   required String alasanIzin,
@@ -114,6 +117,7 @@ Future<AttendanceApiResponse> submitIzin({
   );
 }
 
+// Mengambil status absensi user pada tanggal yang dipilih.
 Future<AttendanceApiResponse> getTodayAttendance({
   required String attendanceDate,
 }) async {
@@ -146,6 +150,7 @@ Future<AttendanceApiResponse> getTodayAttendance({
   );
 }
 
+// Mengambil ringkasan statistik absensi user pada rentang tanggal yang diminta.
 Future<AttendanceStatsResponse> getAttendanceStats({
   required String startDate,
   required String endDate,
@@ -177,6 +182,7 @@ Future<AttendanceStatsResponse> getAttendanceStats({
   );
 }
 
+// Mengambil riwayat absensi, merapikan bentuk data, lalu mengurutkannya dari terbaru.
 Future<List<AttendanceRecord>> getAttendanceHistory({
   required String startDate,
   required String endDate,
@@ -237,6 +243,7 @@ Future<List<AttendanceRecord>> getAttendanceHistory({
   return records;
 }
 
+// Menghapus satu data absensi berdasarkan ID yang dikirim dari aplikasi.
 Future<AttendanceApiResponse> deleteAttendance({required int id}) async {
   final token = await PreferenceHandler.getToken();
   final response = await http.delete(

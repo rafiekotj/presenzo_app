@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:presenzo_app/services/api/endpoint.dart';
 
+// Mengirim permintaan OTP reset password ke email yang dimasukkan user.
 Future<String> requestOtpForForgotPassword({required String email}) async {
   final response = await http.post(
     Uri.parse(Endpoint.forgotPassword),

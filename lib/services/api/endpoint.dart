@@ -1,10 +1,6 @@
 class Endpoint {
   static const String baseUrl = "https://appabsensi.mobileprojp.com/api";
 
-  // ============================================================================
-  // AUTH ENDPOINTS
-  // ============================================================================
-
   /// POST - Register akun baru
   /// ✅ DIPAKAI | 📁 services/api/register.dart | 📦 models/register_model.dart
   /// Dipakai di RegisterScreen untuk membuat akun baru
@@ -25,10 +21,6 @@ class Endpoint {
   /// Dipakai di NewPasswordScreen setelah OTP valid
   static const String resetPassword = "$baseUrl/reset-password";
 
-  // ============================================================================
-  // PROFILE ENDPOINTS
-  // ============================================================================
-
   /// GET/PUT - Ambil/update data profil user
   /// ✅ DIPAKAI | 📁 services/api/get_user.dart, update_profile.dart | 📦 models/get_model.dart
   /// GET: Dipakai di HomeScreen dan ProfileScreen untuk ambil data user
@@ -39,10 +31,6 @@ class Endpoint {
   /// ✅ DIPAKAI | 📁 services/api/profile_photo.dart | 📦 models/get_model.dart
   /// Untuk upload/ganti foto profil di ProfileEditScreen
   static const String profilePhoto = "$baseUrl/profile/photo";
-
-  // ============================================================================
-  // ATTENDANCE CHECK-IN/CHECK-OUT ENDPOINTS
-  // ============================================================================
 
   /// POST - Check in absensi
   /// ✅ DIPAKAI | 📁 services/api/attendance.dart | 📦 models/attendance_model.dart
@@ -82,20 +70,13 @@ class Endpoint {
   /// ⏸️ BELUM DIPAKAI | 📄 services/api/attendance.dart (jika diperlukan) | 📦 models/attendance_model.dart
   /// Path parameter: id (attendance ID)
   /// Kemungkinan untuk admin atau koreksi data di panel admin
+  // Menyusun endpoint absensi berdasarkan ID data yang ingin dihapus.
   static String absenById(String id) => "$baseUrl/absen/$id";
-
-  // ============================================================================
-  // SYSTEM ENDPOINTS
-  // ============================================================================
 
   /// POST - Simpan token push notification
   /// ⏸️ BELUM DIPAKAI | 📄 services/api/[future].dart | 📦 models/-
   /// Untuk menyimpan token push notification (future feature)
   static const String deviceToken = "$baseUrl/device-token";
-
-  // ============================================================================
-  // MASTER DATA ENDPOINTS
-  // ============================================================================
 
   /// GET - Daftar user (admin)
   /// ⏸️ BELUM DIPAKAI | 📄 services/api/[future].dart | 📦 models/-
@@ -111,6 +92,7 @@ class Endpoint {
   /// ⏸️ BELUM DIPAKAI | 📄 services/api/training.dart (jika diperlukan) | 📦 models/training_model.dart
   /// Path parameter: id (training ID) untuk detail training
   /// Kemungkinan akan dipakai untuk lihat detail training tertentu
+  // Menyusun endpoint detail training berdasarkan ID training.
   static String trainingById(String id) => "$baseUrl/trainings/$id";
 
   /// GET - Ambil daftar batch

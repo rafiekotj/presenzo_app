@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:presenzo_app/models/register_model.dart';
 import 'package:presenzo_app/services/api/endpoint.dart';
 
+// Mengirim data pendaftaran akun baru beserta training, batch, dan jenis kelamin.
 Future<RegisterModel?> registerUser({
   required String name,
   required String email,

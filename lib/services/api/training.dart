@@ -12,6 +12,7 @@ class TrainingOptionItem {
   const TrainingOptionItem({required this.id, required this.label});
 }
 
+// Mengambil daftar training dari server lalu mengubahnya ke format pilihan dropdown.
 Future<List<TrainingOptionItem>> getTrainings() async {
   final token = await PreferenceHandler.getToken();
   final headers = <String, String>{"Accept": "application/json"};
@@ -61,6 +62,7 @@ Future<List<TrainingOptionItem>> getTrainings() async {
       .toList();
 }
 
+// Membaca nama training dari beberapa kemungkinan key respons API.
 String? _readLabel(Map<String, dynamic> item) {
   const candidates = ['name', 'nama', 'title', 'training_name'];
 

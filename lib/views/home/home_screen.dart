@@ -302,18 +302,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     if (checkIn.isNotEmpty && checkOut.isNotEmpty) {
+      // Check if check-in is after 08:00:00
+      final isLate = _isCheckInLate(checkIn);
       return _AttendanceHistoryEntry(
         date: date,
-        status: _AttendanceStatus.present,
+        status: isLate ? _AttendanceStatus.late : _AttendanceStatus.present,
         detail: '$checkIn - $checkOut',
         record: record,
       );
     }
 
     if (checkIn.isNotEmpty) {
+      // Check if check-in is after 08:00:00
+      final isLate = _isCheckInLate(checkIn);
       return _AttendanceHistoryEntry(
         date: date,
-        status: _AttendanceStatus.present,
+        status: isLate ? _AttendanceStatus.late : _AttendanceStatus.present,
         detail: 'Masuk - $checkIn',
         record: record,
       );
@@ -326,6 +330,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       detail: 'Tanpa Keterangan',
       record: record,
     );
+  }
+
+  bool _isCheckInLate(String checkInTime) {
+    try {
+      // Parse time format HH:mm:ss or HH:mm
+      final parts = checkInTime.split(':');
+      if (parts.length < 2) return false;
+
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+
+      // 08:00:00 = jam 8 pagi, jadi late jika > 08:00
+      return hour > 8 || (hour == 8 && minute > 0);
+    } catch (_) {
+      return false;
+    }
   }
 
   ImageProvider? _buildAvatarProvider(String? photoUrl) {
@@ -1205,7 +1225,7 @@ class _AttendanceHistoryEntry {
       case _AttendanceStatus.leave:
         return AppColor.warning;
       case _AttendanceStatus.late:
-        return AppColor.primary;
+        return AppColor.success;
       case _AttendanceStatus.absent:
         return AppColor.error;
     }
