@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               style: TextStyle(
                 color: AppColor.textPrimary,
                 fontSize: 28,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
               ),
             ),
@@ -533,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               style: const TextStyle(
                                 color: AppColor.surface,
                                 fontSize: 26,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -566,7 +566,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         DateFormat(
@@ -581,32 +581,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 12),
                       Text(
-                        DateFormat('HH:mm:ss').format(_currentDateTime),
+                        DateFormat('HH:mm').format(_currentDateTime),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: AppColor.textPrimary,
+                          color: AppColor.secondary,
                           fontSize: 48,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 1,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        height: 1,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColor.border.withValues(alpha: 0),
-                              AppColor.border.withValues(alpha: 0.4),
-                              AppColor.border.withValues(alpha: 0),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       FutureBuilder<AttendanceApiResponse>(
                         future: _todayAttendanceFuture,
                         builder: (context, attendanceSnapshot) {
@@ -669,13 +654,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                             ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(24),
-                                        side: BorderSide(
-                                          color: isCheckInEnabled
-                                              ? AppColor.surface.withValues(
-                                                  alpha: 0.25,
-                                                )
-                                              : Colors.transparent,
-                                        ),
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
@@ -693,22 +671,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       children: [
                                         Icon(
                                           Icons.fingerprint,
-                                          size: 22,
+                                          size: 20,
                                           color: isCheckInEnabled
                                               ? AppColor.surface
-                                              : AppColor.surface.withValues(
-                                                  alpha: 0.5,
+                                              : AppColor.textPrimary.withValues(
+                                                  alpha: 0.4,
                                                 ),
                                         ),
-                                        const SizedBox(width: 10),
+                                        const SizedBox(width: 8),
                                         Text(
                                           'Absen Masuk',
                                           style: TextStyle(
                                             color: isCheckInEnabled
                                                 ? AppColor.surface
-                                                : AppColor.surface.withValues(
-                                                    alpha: 0.5,
-                                                  ),
+                                                : AppColor.textPrimary
+                                                      .withValues(alpha: 0.4),
+                                            fontSize: 12,
                                           ),
                                         ),
                                       ],
@@ -740,10 +718,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     style: ElevatedButton.styleFrom(
                                       elevation: isCheckOutEnabled ? 8 : 0,
                                       shadowColor: isCheckOutEnabled
-                                          ? const Color(0x3316A34A)
+                                          ? const Color(0x4D1D4ED8)
                                           : Colors.transparent,
                                       backgroundColor: isCheckOutEnabled
-                                          ? AppColor.success
+                                          ? AppColor.primary
                                           : AppColor.textSecondary.withValues(
                                               alpha: 0.3,
                                             ),
@@ -754,13 +732,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                             ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(24),
-                                        side: BorderSide(
-                                          color: isCheckOutEnabled
-                                              ? AppColor.surface.withValues(
-                                                  alpha: 0.25,
-                                                )
-                                              : Colors.transparent,
-                                        ),
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
@@ -778,11 +749,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       children: [
                                         Icon(
                                           Icons.logout,
-                                          size: 22,
+                                          size: 20,
                                           color: isCheckOutEnabled
                                               ? AppColor.surface
-                                              : AppColor.surface.withValues(
-                                                  alpha: 0.5,
+                                              : AppColor.textPrimary.withValues(
+                                                  alpha: 0.4,
                                                 ),
                                         ),
                                         const SizedBox(width: 10),
@@ -791,9 +762,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           style: TextStyle(
                                             color: isCheckOutEnabled
                                                 ? AppColor.surface
-                                                : AppColor.surface.withValues(
-                                                    alpha: 0.5,
-                                                  ),
+                                                : AppColor.textPrimary
+                                                      .withValues(alpha: 0.4),
+                                            fontSize: 12,
                                           ),
                                         ),
                                       ],
@@ -818,37 +789,50 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   decoration: BoxDecoration(
                     color: AppColor.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColor.primary.withValues(alpha: 0.18),
-                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  child: Row(
                     children: [
-                      Text(
-                        'Jam Pelatihan',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColor.primary.withValues(alpha: 0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.4,
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColor.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          Icons.access_time,
+                          color: AppColor.primary,
+                          size: 26,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        '08:00 - 15:00',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColor.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Jam Pelatihan',
+                            style: TextStyle(
+                              color: AppColor.primary.withValues(alpha: 0.9),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            '08:00 - 15:00',
+                            style: TextStyle(
+                              color: AppColor.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 // Attendance Statistics Section
                 FutureBuilder<AttendanceStatsResponse>(
                   future: _attendanceStatsFuture,
@@ -870,79 +854,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Container(
-                                width: 4,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: AppColor.primary,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
                               const Text(
                                 'Statistik Absensi',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColor.textPrimary,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
                             Expanded(
                               child: Container(
-                                height: 115,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 14,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColor.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: AppColor.success.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColor.success.withValues(
-                                        alpha: 0.05,
-                                      ),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                                  color: AppColor.secondary,
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      stats.totalMasuk.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColor.success,
-                                        letterSpacing: -1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      'Hadir',
+                                      'HADIR',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColor.textSecondary,
-                                        letterSpacing: 0.2,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColor.surface,
+                                        letterSpacing: 1.5,
                                       ),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      stats.totalMasuk.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColor.surface,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -951,54 +908,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Container(
-                                height: 115,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 14,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColor.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: AppColor.warning.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    width: 1.5,
+                                  color: AppColor.warning.withValues(
+                                    alpha: 0.9,
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColor.warning.withValues(
-                                        alpha: 0.05,
-                                      ),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      stats.totalIzin.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColor.warning,
-                                        letterSpacing: -1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      'Izin',
+                                      'IZIN',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColor.textSecondary,
-                                        letterSpacing: 0.2,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColor.textPrimary,
+                                        letterSpacing: 1.5,
                                       ),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      stats.totalIzin.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColor.textPrimary,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1010,27 +951,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 4,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: AppColor.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
                           'Riwayat Kehadiran',
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                             color: AppColor.textPrimary,
                           ),
                         ),
@@ -1089,10 +1021,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: AppColor.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppColor.border.withValues(alpha: 0.4),
-                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColor.primary.withValues(alpha: 0.06),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1161,11 +1097,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     color: AppColor.surface,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: entry.color.withValues(alpha: 0.1),
-                                      width: 1.5,
-                                    ),
+                                    borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
                                         color: entry.color.withValues(
@@ -1188,11 +1120,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           borderRadius: BorderRadius.circular(
                                             14,
                                           ),
-                                          border: Border.all(
-                                            color: entry.color.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                          ),
                                         ),
                                         child: Icon(
                                           entry.icon,
@@ -1212,14 +1139,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
                                                 color: AppColor.textPrimary,
-                                                letterSpacing: 0.3,
                                               ),
                                             ),
-                                            const SizedBox(height: 6),
+                                            const SizedBox(height: 2),
                                             Text(
                                               entry.detail,
                                               style: const TextStyle(
-                                                fontSize: 13,
+                                                fontSize: 12,
                                                 fontWeight: FontWeight.w600,
                                                 color: AppColor.textSecondary,
                                               ),
@@ -1230,7 +1156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       const SizedBox(width: 12),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
+                                          horizontal: 10,
                                           vertical: 8,
                                         ),
                                         decoration: BoxDecoration(
@@ -1240,19 +1166,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
-                                          border: Border.all(
-                                            color: entry.color.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                          ),
                                         ),
                                         child: Text(
                                           entry.statusLabel,
                                           style: TextStyle(
-                                            fontSize: 11,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w700,
                                             color: entry.color,
-                                            letterSpacing: 0.3,
                                           ),
                                         ),
                                       ),
@@ -1334,7 +1254,7 @@ class _AttendanceHistoryEntry {
       case _AttendanceStatus.leave:
         return Icons.event_busy;
       case _AttendanceStatus.late:
-        return Icons.access_time;
+        return Icons.check_circle;
       case _AttendanceStatus.absent:
         return Icons.cancel;
     }
