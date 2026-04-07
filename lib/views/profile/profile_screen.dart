@@ -73,18 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : AppColor.textSecondary;
 
     return Scaffold(
+      appBar: AppBar(title: Text("Profil")),
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          'Profil',
-          style: TextStyle(color: textPrimary, fontWeight: FontWeight.w800),
-        ),
-        centerTitle: true,
-      ),
       body: FutureBuilder<GetUserModel?>(
         future: _profileFuture,
         builder: (context, snapshot) {
@@ -95,147 +85,250 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final user = snapshot.data?.data;
           final name = (user?.name ?? 'Pengguna').trim();
           final email = (user?.email ?? '-').trim();
+          final avatarProvider = _buildAvatarProvider(user?.photoUrl);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x120F172A),
-                        blurRadius: 20,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Row(
+                Center(
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
                     children: [
                       Container(
-                        width: 64,
-                        height: 64,
+                        width: 124,
+                        height: 124,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColor.primary, width: 2),
+                          color: AppColor.primary.withValues(alpha: 0.14),
                         ),
-                        child: CircleAvatar(
-                          backgroundColor: AppColor.primarySoft,
-                          backgroundImage: _buildAvatarProvider(user?.photoUrl),
-                          child: _buildAvatarProvider(user?.photoUrl) == null
-                              ? const Icon(
-                                  Icons.person,
-                                  color: AppColor.primary,
-                                  size: 34,
-                                )
-                              : null,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: CircleAvatar(
+                            backgroundColor: AppColor.primarySoft,
+                            backgroundImage: avatarProvider,
+                            child: avatarProvider == null
+                                ? const Icon(
+                                    Icons.person,
+                                    color: AppColor.primary,
+                                    size: 56,
+                                  )
+                                : null,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              email,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: textSecondary,
-                              ),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: surfaceColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColor.primary.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColor.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Akun',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Gunakan tombol di bawah untuk mengubah profil atau keluar dari akun.',
-                        style: TextStyle(
-                          color: textSecondary,
-                          fontSize: 12,
-                          height: 1.4,
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          color: AppColor.primary,
+                          size: 20,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final result = await Navigator.of(context).push(
-                        MaterialPageRoute<bool>(
-                          builder: (_) => const ProfileEditScreen(),
-                        ),
-                      );
-                      // Refresh profile if edit was successful
-                      if (result == true && mounted) {
-                        _refreshProfile();
-                      }
-                    },
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Edit Profil'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.primary,
-                      foregroundColor: AppColor.textOnPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.badge_outlined, size: 16, color: textSecondary),
+                    const SizedBox(width: 6),
+                    Text(
+                      email,
+                      style: TextStyle(fontSize: 12, color: textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColor.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      'Akun Presensi',
+                      style: TextStyle(
+                        color: AppColor.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 24),
+                Text(
+                  'PENGATURAN AKUN',
+                  style: TextStyle(
+                    color: textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      await PreferenceHandler.clearAuthData();
-                      if (!context.mounted) return;
-                      context.pushAndRemoveAll(const LoginScreen());
-                    },
-                    icon: const Icon(Icons.logout_rounded),
-                    label: const Text('Logout'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColor.error,
-                      side: const BorderSide(color: AppColor.error),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () async {
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute<bool>(
+                        builder: (_) => const ProfileEditScreen(),
                       ),
+                    );
+                    if (result == true && mounted) {
+                      _refreshProfile();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColor.primary.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColor.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                          child: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColor.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Edit Profil',
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Ubah informasi akun dan foto profil',
+                                style: TextStyle(
+                                  color: textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () async {
+                    await PreferenceHandler.clearAuthData();
+                    if (!context.mounted) return;
+                    context.pushAndRemoveAll(const LoginScreen());
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColor.error.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColor.error.withValues(
+                            alpha: 0.12,
+                          ),
+                          child: const Icon(
+                            Icons.logout_rounded,
+                            color: AppColor.error,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Logout',
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Keluar aman dari sesi akun saat ini',
+                                style: TextStyle(
+                                  color: textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: textSecondary,
+                        ),
+                      ],
                     ),
                   ),
                 ),

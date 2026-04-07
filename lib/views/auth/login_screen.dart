@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
+import 'package:presenzo_app/models/login_model.dart';
 import 'package:presenzo_app/services/api/login.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
 import 'package:presenzo_app/views/auth/forgot_password_screen.dart';
@@ -28,11 +29,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isCheckingSession = true;
 
   @override
+  /// Menjalankan inisialisasi awal halaman login dan memeriksa sesi tersimpan.
   void initState() {
     super.initState();
     _checkSavedLogin();
   }
 
+  /// Memeriksa status login tersimpan untuk menentukan perlu login ulang atau langsung masuk.
   Future<void> _checkSavedLogin() async {
     final isLogin = await PreferenceHandler.getIsLogin();
     final token = await PreferenceHandler.getToken();
@@ -40,10 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (isLogin == true && (token?.isNotEmpty ?? false)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        context.pushAndRemoveAll(const BottomNavbar());
-      });
+      _goToHomeAfterFrame();
       return;
     }
 
@@ -52,13 +52,83 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void visibilityOnOff() {
+  /// Menavigasi ke halaman utama setelah frame selesai agar perpindahan halaman aman.
+  void _goToHomeAfterFrame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.pushAndRemoveAll(const BottomNavbar());
+    });
+  }
+
+  /// Mengubah mode tampil atau sembunyi pada input kata sandi.
+  void _togglePasswordVisibility() {
     setState(() {
       isVisibility = !isVisibility;
     });
   }
 
+  /// Menyimpan token dan data sesi pengguna setelah autentikasi berhasil.
+  Future<void> _persistLoginSession(LoginModel? login, String token) async {
+    if (token.isEmpty) return;
+
+    await PreferenceHandler().storingToken(token);
+    await PreferenceHandler().storingIsLogin(true);
+
+    final createdAt = login?.data?.user?.createdAt;
+    if (createdAt != null) {
+      await PreferenceHandler().storingUserCreatedAt(createdAt);
+    }
+  }
+
+  /// Menangani alur login dari validasi form, request API, hingga navigasi.
+  Future<void> _handleLoginSubmit() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    String message = 'Login gagal';
+    String token = '';
+
+    try {
+      final login = await loginUser(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      token = login?.data?.token ?? '';
+      message = login?.message ?? 'Login berhasil';
+
+      await _persistLoginSession(login, token);
+    } catch (e) {
+      log(e.toString());
+      message = e
+          .toString()
+          .replaceFirst('Exception: ', '')
+          .replaceFirst('HttpException: ', '')
+          .trim();
+    }
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (token.isNotEmpty) {
+      context.pushAndRemoveAll(const BottomNavbar());
+    }
+  }
+
   @override
+  /// Membersihkan seluruh controller input ketika halaman login ditutup.
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
@@ -66,6 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  /// Menyusun tampilan halaman login beserta form, aksi masuk, dan navigasi terkait.
   Widget build(BuildContext context) {
     if (isCheckingSession) {
       return const Scaffold(
@@ -146,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 enableSuggestions: false,
                                 autocorrect: false,
                                 suffixIcon: InkWell(
-                                  onTap: visibilityOnOff,
+                                  onTap: _togglePasswordVisibility,
                                   child: Icon(
                                     size: 20,
                                     isVisibility
@@ -165,69 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               CustomButton(
                                 text: 'Masuk',
                                 isLoading: isLoading,
-                                onPressed: () async {
-                                  if (!_formKey.currentState!.validate()) {
-                                    return;
-                                  }
-
-                                  setState(() {
-                                    isLoading = true;
-                                  });
-
-                                  String message = 'Login gagal';
-                                  String token = '';
-
-                                  try {
-                                    final login = await loginUser(
-                                      email: emailController.text.trim(),
-                                      password: passwordController.text,
-                                    );
-
-                                    token = login?.data?.token ?? '';
-                                    message =
-                                        login?.message ?? 'Login berhasil';
-
-                                    if (token.isNotEmpty) {
-                                      await PreferenceHandler().storingToken(
-                                        token,
-                                      );
-                                      await PreferenceHandler().storingIsLogin(
-                                        true,
-                                      );
-                                      // Store user creation date
-                                      if (login?.data?.user?.createdAt !=
-                                          null) {
-                                        await PreferenceHandler()
-                                            .storingUserCreatedAt(
-                                              login!.data!.user!.createdAt!,
-                                            );
-                                      }
-                                    }
-                                  } catch (e) {
-                                    log(e.toString());
-                                    message = e
-                                        .toString()
-                                        .replaceFirst('Exception: ', '')
-                                        .replaceFirst('HttpException: ', '')
-                                        .trim();
-                                  }
-
-                                  if (!context.mounted) return;
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
-
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-
-                                  if (token.isNotEmpty) {
-                                    context.pushAndRemoveAll(
-                                      const BottomNavbar(),
-                                    );
-                                  }
-                                },
+                                onPressed: _handleLoginSubmit,
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 16),

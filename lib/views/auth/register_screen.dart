@@ -24,7 +24,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // GlobalKey untuk dropdown
   late final GlobalKey<State<CustomDropdownField<int>>> _trainingDropdownKey =
       GlobalKey();
   late final GlobalKey<State<CustomDropdownField<int>>> _batchDropdownKey =
@@ -44,18 +43,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
   int? selectedBatchId;
   String? selectedGender;
 
-  void visibilityOnOff() {
-    setState(() {
-      isVisibility = !isVisibility;
-    });
-  }
-
   @override
+  /// Menjalankan inisialisasi awal halaman register dan memuat opsi dropdown.
   void initState() {
     super.initState();
     _loadDropdownOptions();
   }
 
+  /// Mengubah mode tampil atau sembunyi pada input kata sandi.
+  void _togglePasswordVisibility() {
+    setState(() {
+      isVisibility = !isVisibility;
+    });
+  }
+
+  /// Menyusun daftar item dropdown integer dari data API agar konsisten dipakai di UI.
+  List<DropdownMenuItem<int>> _buildMenuItems<T>(
+    List<T> items, {
+    required int? Function(T item) idSelector,
+    required String Function(T item) labelSelector,
+  }) {
+    return items
+        .map(
+          (item) => DropdownMenuItem<int>(
+            value: idSelector(item),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(labelSelector(item)),
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  /// Memuat data training dan batch lalu mengubahnya menjadi item dropdown.
   Future<void> _loadDropdownOptions() async {
     setState(() {
       isLoadingOptions = true;
@@ -69,38 +90,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         trainings = loadedTrainings;
         batches = loadedBatches;
-        trainingMenuItems = trainings
-            .map(
-              (item) => DropdownMenuItem<int>(
-                value: item.id,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(item.label),
-                ),
-              ),
-            )
-            .toList();
-        batchMenuItems = batches
-            .map(
-              (item) => DropdownMenuItem<int>(
-                value: item.id,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(item.label),
-                ),
-              ),
-            )
-            .toList();
+        trainingMenuItems = _buildMenuItems<TrainingOptionItem>(
+          trainings,
+          idSelector: (item) => item.id,
+          labelSelector: (item) => item.label,
+        );
+        batchMenuItems = _buildMenuItems<BatchOptionItem>(
+          batches,
+          idSelector: (item) => item.id,
+          labelSelector: (item) => item.label,
+        );
       });
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal memuat pilihan training/batch. Silakan coba lagi.',
-          ),
-        ),
-      );
+      _showMessage('Gagal memuat pilihan training/batch. Silakan coba lagi.');
     } finally {
       if (mounted) {
         setState(() {
@@ -110,7 +112,83 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  /// Menampilkan pesan singkat ke pengguna dengan tampilan snackbar yang konsisten.
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// Memvalidasi seluruh dropdown wajib agar submit hanya berjalan saat data lengkap.
+  bool _validateRequiredDropdowns() {
+    final genderError = (_genderDropdownKey.currentState as dynamic)
+        ?.validate();
+    final batchError = (_batchDropdownKey.currentState as dynamic)?.validate();
+    final trainingError = (_trainingDropdownKey.currentState as dynamic)
+        ?.validate();
+
+    return genderError == null && batchError == null && trainingError == null;
+  }
+
+  /// Menangani alur register dari validasi form hingga navigasi ke halaman login.
+  Future<void> _handleRegisterSubmit() async {
+    if (isLoadingOptions) {
+      _showMessage('Tunggu sampai pilihan selesai dimuat.');
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_validateRequiredDropdowns()) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    String message = 'Pendaftaran gagal';
+    var isSuccess = false;
+
+    try {
+      final result = await registerUser(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        trainingId: selectedTrainingId!,
+        batchId: selectedBatchId!,
+        jenisKelamin: selectedGender!,
+      );
+
+      isSuccess = true;
+      message = result?.message ?? 'Pendaftaran sukses, silahkan login';
+    } catch (e) {
+      log(e.toString());
+      message = e
+          .toString()
+          .replaceFirst('Exception: ', '')
+          .replaceFirst('HttpException: ', '')
+          .trim();
+    }
+
+    if (!context.mounted) return;
+
+    _showMessage(message);
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (isSuccess) {
+      context.pushReplacement(const LoginScreen());
+    }
+  }
+
   @override
+  /// Membersihkan seluruh controller input saat halaman register ditutup.
   void dispose() {
     nameController.dispose();
     emailController.dispose();
@@ -119,6 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   @override
+  /// Menyusun tampilan halaman register beserta field, dropdown, dan aksi daftar.
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -204,7 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 enableSuggestions: false,
                                 autocorrect: false,
                                 suffixIcon: InkWell(
-                                  onTap: visibilityOnOff,
+                                  onTap: _togglePasswordVisibility,
                                   child: Icon(
                                     size: 20,
                                     isVisibility
@@ -337,89 +416,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               CustomButton(
                                 text: 'Daftar',
                                 isLoading: isLoading,
-                                onPressed: () async {
-                                  if (isLoadingOptions) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Tunggu sampai pilihan selesai dimuat.',
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  // Validasi text field
-                                  if (!_formKey.currentState!.validate()) {
-                                    return;
-                                  }
-
-                                  // Validasi dropdown dengan memanggil validate()
-                                  final genderError =
-                                      (_genderDropdownKey.currentState
-                                              as dynamic)
-                                          ?.validate();
-                                  final batchError =
-                                      (_batchDropdownKey.currentState
-                                              as dynamic)
-                                          ?.validate();
-                                  final trainingError =
-                                      (_trainingDropdownKey.currentState
-                                              as dynamic)
-                                          ?.validate();
-
-                                  if (genderError != null ||
-                                      batchError != null ||
-                                      trainingError != null) {
-                                    return; // Ada error di dropdown, tidak submit
-                                  }
-
-                                  setState(() {
-                                    isLoading = true;
-                                  });
-
-                                  String message = 'Pendaftaran gagal';
-                                  bool isSuccess = false;
-
-                                  try {
-                                    final result = await registerUser(
-                                      name: nameController.text.trim(),
-                                      email: emailController.text.trim(),
-                                      password: passwordController.text,
-                                      trainingId: selectedTrainingId!,
-                                      batchId: selectedBatchId!,
-                                      jenisKelamin: selectedGender!,
-                                    );
-
-                                    isSuccess = true;
-                                    message =
-                                        result?.message ??
-                                        'Pendaftaran sukses, silahkan login';
-                                  } catch (e) {
-                                    log(e.toString());
-                                    message = e
-                                        .toString()
-                                        .replaceFirst('Exception: ', '')
-                                        .replaceFirst('HttpException: ', '')
-                                        .trim();
-                                  }
-
-                                  if (!context.mounted) return;
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
-
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-
-                                  if (isSuccess) {
-                                    context.pushReplacement(
-                                      const LoginScreen(),
-                                    );
-                                  }
-                                },
+                                onPressed: _handleRegisterSubmit,
                               ),
                             ],
                           ),

@@ -16,23 +16,24 @@ class AttendanceDetailScreen extends StatefulWidget {
 }
 
 class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
-  late GoogleMapController mapController;
-  late Set<Marker> markers;
-  late LatLngBounds bounds;
+  GoogleMapController? _mapController;
+  Set<Marker> _markers = {};
+  LatLngBounds? _markerBounds;
   bool _isDeleting = false;
 
   @override
+  /// Menjalankan inisialisasi data peta saat layar detail dibuka.
   void initState() {
     super.initState();
-    _initializeMarkers();
+    _prepareMapData();
   }
 
-  void _initializeMarkers() {
-    markers = {};
+  /// Menyiapkan marker check-in/check-out dan menghitung batas area kamera peta.
+  void _prepareMapData() {
+    _markers = {};
 
-    // Add check-in marker
     if (widget.record.checkInLat != null && widget.record.checkInLng != null) {
-      markers.add(
+      _markers.add(
         Marker(
           markerId: const MarkerId('check_in'),
           position: LatLng(
@@ -50,10 +51,9 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
       );
     }
 
-    // Add check-out marker
     if (widget.record.checkOutLat != null &&
         widget.record.checkOutLng != null) {
-      markers.add(
+      _markers.add(
         Marker(
           markerId: const MarkerId('check_out'),
           position: LatLng(
@@ -69,57 +69,40 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
       );
     }
 
-    // Calculate bounds
-    if (markers.isNotEmpty) {
-      final lats = markers.map((m) => m.position.latitude).toList();
-      final lngs = markers.map((m) => m.position.longitude).toList();
-      final south = lats.reduce((a, b) => a < b ? a : b);
-      final north = lats.reduce((a, b) => a > b ? a : b);
-      final west = lngs.reduce((a, b) => a < b ? a : b);
-      final east = lngs.reduce((a, b) => a > b ? a : b);
+    if (_markers.isNotEmpty) {
+      final lats = _markers.map((m) => m.position.latitude).toList();
+      final lngs = _markers.map((m) => m.position.longitude).toList();
+      var south = lats.reduce((a, b) => a < b ? a : b);
+      var north = lats.reduce((a, b) => a > b ? a : b);
+      var west = lngs.reduce((a, b) => a < b ? a : b);
+      var east = lngs.reduce((a, b) => a > b ? a : b);
 
-      bounds = LatLngBounds(
+      const minSpan = 0.002;
+      final latSpan = north - south;
+      final lngSpan = east - west;
+
+      if (latSpan < minSpan) {
+        final centerLat = (north + south) / 2;
+        south = centerLat - (minSpan / 2);
+        north = centerLat + (minSpan / 2);
+      }
+
+      if (lngSpan < minSpan) {
+        final centerLng = (east + west) / 2;
+        west = centerLng - (minSpan / 2);
+        east = centerLng + (minSpan / 2);
+      }
+
+      _markerBounds = LatLngBounds(
         southwest: LatLng(south, west),
         northeast: LatLng(north, east),
       );
+    } else {
+      _markerBounds = null;
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-    if (markers.isNotEmpty) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-      });
-    }
-  }
-
-  Color _getStatusColor() {
-    switch ((widget.record.status ?? '').toLowerCase()) {
-      case 'masuk':
-        return AppColor.success;
-      case 'izin':
-        return AppColor.warning;
-      case 'terlambat':
-        return AppColor.secondary;
-      default:
-        return AppColor.error;
-    }
-  }
-
-  String _getStatusLabel() {
-    switch ((widget.record.status ?? '').toLowerCase()) {
-      case 'masuk':
-        return 'Hadir';
-      case 'izin':
-        return 'Izin';
-      case 'terlambat':
-        return 'Terlambat';
-      default:
-        return 'Tidak Hadir';
-    }
-  }
-
+  /// Menangani konfirmasi dan proses hapus data absensi, lalu memicu refresh data home.
   Future<void> _handleDeleteAttendance() async {
     if (_isDeleting || widget.record.id == null) return;
 
@@ -157,7 +140,6 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Absensi berhasil dihapus')));
 
-      // Refresh home screen data before navigating back
       HomeScreen.refresh();
 
       Navigator.pop(context, true);
@@ -177,7 +159,22 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
   }
 
   @override
+  /// Menyusun seluruh tampilan detail kehadiran berdasarkan data absensi yang dipilih.
   Widget build(BuildContext context) {
+    final status = (widget.record.status ?? '').toLowerCase();
+    final statusColor = switch (status) {
+      'masuk' => AppColor.success,
+      'izin' => AppColor.warning,
+      'terlambat' => AppColor.secondary,
+      _ => AppColor.error,
+    };
+    final statusLabel = switch (status) {
+      'masuk' => 'Hadir',
+      'izin' => 'Izin',
+      'terlambat' => 'Terlambat',
+      _ => 'Tidak Hadir',
+    };
+
     final formattedDate = widget.record.attendanceDate != null
         ? DateFormat(
             'EEEE, d MMMM y',
@@ -201,364 +198,386 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
         ),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Maps
-            if (markers.isNotEmpty)
+            if (_markers.isNotEmpty)
               Container(
-                height: 300,
-                margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
+                  color: AppColor.surface,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(13),
+                      color: AppColor.primary.withValues(alpha: 0.08),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: GoogleMap(
-                    onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(
-                        widget.record.checkInLat ?? 0,
-                        widget.record.checkInLng ?? 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Lokasi Presensi',
+                        style: TextStyle(
+                          color: AppColor.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      zoom: 16,
-                    ),
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    zoomControlsEnabled: true,
-                    markers: markers,
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 240,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: GoogleMap(
+                            onMapCreated: (controller) {
+                              _mapController = controller;
+                              final bounds = _markerBounds;
+                              if (bounds == null) return;
+                              Future.delayed(
+                                const Duration(milliseconds: 500),
+                                () {
+                                  _mapController?.animateCamera(
+                                    CameraUpdate.newLatLngBounds(bounds, 30),
+                                  );
+                                },
+                              );
+                            },
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(
+                                widget.record.checkInLat ?? 0,
+                                widget.record.checkInLng ?? 0,
+                              ),
+                              zoom: 16,
+                            ),
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: true,
+                            zoomControlsEnabled: true,
+                            markers: _markers,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-
-            // Status Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: _getStatusColor().withAlpha(25),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _getStatusColor().withAlpha(50)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Status',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getStatusLabel(),
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: _getStatusColor(),
-                      ),
-                    ),
-                    if ((widget.record.status ?? '').toLowerCase() == 'izin' &&
-                        widget.record.alasanIzin != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Text(
-                          'Alasan: ${widget.record.alasanIzin}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppColor.textSecondary,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
             const SizedBox(height: 16),
-
-            // Tanggal
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColor.surface,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: statusColor.withValues(alpha: 0.10),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Status',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: statusColor,
+                    ),
+                  ),
+                  if ((widget.record.status ?? '').toLowerCase() == 'izin' &&
+                      widget.record.alasanIzin != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'Alasan: ${widget.record.alasanIzin}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColor.textSecondary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColor.surface,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColor.primary.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
                     'Tanggal',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                       color: AppColor.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColor.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColor.border.withAlpha(80)),
-                    ),
-                    child: Text(
-                      formattedDate,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColor.textPrimary,
-                      ),
+                  const SizedBox(height: 6),
+                  Text(
+                    formattedDate,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.textPrimary,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-
-            // Check-in
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColor.surface,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColor.success.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Check-in',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Waktu',
+                    style: TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColor.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColor.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColor.border.withAlpha(80)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Waktu',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          widget.record.checkInTime ?? '-',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColor.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Lokasi',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          widget.record.checkInAddress ?? '-',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppColor.textPrimary,
-                          ),
-                        ),
-                        if (widget.record.checkInLat != null &&
-                            widget.record.checkInLng != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColor.success.withAlpha(25),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${widget.record.checkInLat?.toStringAsFixed(5)}, ${widget.record.checkInLng?.toStringAsFixed(5)}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColor.success,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.record.checkInTime ?? '-',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Lokasi',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.record.checkInAddress ?? '-',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColor.textPrimary,
+                    ),
+                  ),
+                  if (widget.record.checkInLat != null &&
+                      widget.record.checkInLng != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.success.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${widget.record.checkInLat?.toStringAsFixed(5)}, ${widget.record.checkInLng?.toStringAsFixed(5)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.success,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Check-out
-            if (widget.record.checkOutTime != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+            if (widget.record.checkOutTime != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColor.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColor.error.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Check-out',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Waktu',
+                      style: TextStyle(
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColor.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColor.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColor.border.withAlpha(80),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Waktu',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColor.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            widget.record.checkOutTime ?? '-',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColor.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Lokasi',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColor.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            widget.record.checkOutAddress ?? '-',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: AppColor.textPrimary,
-                            ),
-                          ),
-                          if (widget.record.checkOutLat != null &&
-                              widget.record.checkOutLng != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColor.error.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '${widget.record.checkOutLat?.toStringAsFixed(5)}, ${widget.record.checkOutLng?.toStringAsFixed(5)}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColor.error,
-                                    fontFamily: 'monospace',
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.record.checkOutTime ?? '-',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.textPrimary,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Lokasi',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.record.checkOutAddress ?? '-',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColor.textPrimary,
+                      ),
+                    ),
+                    if (widget.record.checkOutLat != null &&
+                        widget.record.checkOutLng != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColor.error.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${widget.record.checkOutLat?.toStringAsFixed(5)}, ${widget.record.checkOutLng?.toStringAsFixed(5)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColor.error,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
+            ],
             const SizedBox(height: 24),
-            // Delete Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _isDeleting ? null : _handleDeleteAttendance,
-                  icon: _isDeleting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColor.textOnPrimary,
-                          ),
-                        )
-                      : const Icon(Icons.delete_outline),
-                  label: const Text('Hapus Absensi'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.error,
-                    foregroundColor: AppColor.textOnPrimary,
-                    disabledBackgroundColor: AppColor.error.withValues(
-                      alpha: 0.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: _isDeleting ? null : _handleDeleteAttendance,
+                icon: _isDeleting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColor.textOnPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.delete_outline),
+                label: const Text('Hapus Absensi'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.error,
+                  foregroundColor: AppColor.textOnPrimary,
+                  disabledBackgroundColor: AppColor.error.withValues(
+                    alpha: 0.5,
+                  ),
+                  elevation: 6,
+                  shadowColor: AppColor.error.withValues(alpha: 0.25),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
