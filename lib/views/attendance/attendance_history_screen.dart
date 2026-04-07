@@ -21,12 +21,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   List<_AttendanceHistoryEntry> _attendanceHistory = [];
   String? _errorMessage;
 
+  // Menjalankan pemuatan data riwayat saat halaman pertama kali dibuka.
   @override
   void initState() {
     super.initState();
     _fetchAttendanceHistory();
   }
 
+  // Memuat data riwayat absensi lengkap lalu memperbarui state tampilan.
   Future<void> _fetchAttendanceHistory() async {
     try {
       setState(() {
@@ -34,97 +36,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _errorMessage = null;
       });
 
-      // Fetch user creation date from storage
-      DateTime startDate;
-      try {
-        final createdAtStr = await PreferenceHandler.getUserCreatedAt();
-        if (createdAtStr != null) {
-          final parsedDate = DateTime.tryParse(createdAtStr);
-          if (parsedDate != null) {
-            // Extract date only and set to start of day (00:00:00)
-            startDate = DateTime(
-              parsedDate.year,
-              parsedDate.month,
-              parsedDate.day,
-            );
-          } else {
-            startDate = DateTime.now().subtract(const Duration(days: 365));
-          }
-        } else {
-          startDate = DateTime.now().subtract(const Duration(days: 365));
-        }
-      } catch (_) {
-        // Fallback to 1 year ago if storage access fails
-        startDate = DateTime.now().subtract(const Duration(days: 365));
-      }
-
+      final startDate = await _resolveHistoryStartDate();
       final endDate = DateTime.now();
       final dateFormat = DateFormat('yyyy-MM-dd');
+
       final records = await getAttendanceHistory(
         startDate: dateFormat.format(startDate),
         endDate: dateFormat.format(endDate),
-        limit: -1, // Get all records
+        limit: -1,
       );
 
-      // Get all workdays (Monday-Friday) in the range
+      final filteredRecords = _filterRecordsFromStartDate(records, startDate);
       final allWorkdays = _generateAllWorkdays(startDate, endDate);
-      final today = DateTime.now();
-      final todayStr = dateFormat.format(today);
+      final entries = _buildHistoryEntriesWithVirtualAbsents(
+        filteredRecords: filteredRecords,
+        allWorkdays: allWorkdays,
+        endDate: endDate,
+        dateFormat: dateFormat,
+      );
 
-      // Filter records hanya dari created_at ke depan (client-side filter)
-      final filteredRecords = records.where((record) {
-        if (record.attendanceDate == null) return false;
-        try {
-          final recordDate = DateTime.tryParse(record.attendanceDate!);
-          if (recordDate != null) {
-            // Compare date only (ignore time)
-            return recordDate.year > startDate.year ||
-                (recordDate.year == startDate.year &&
-                    recordDate.month > startDate.month) ||
-                (recordDate.year == startDate.year &&
-                    recordDate.month == startDate.month &&
-                    recordDate.day >= startDate.day);
-          }
-        } catch (_) {}
-        return false;
-      }).toList();
-
-      // Update datesWithRecords dengan filtered records
-      final filteredDatesWithRecords = filteredRecords
-          .map((r) => r.attendanceDate!)
-          .toSet();
-
-      // Buat list entries dari filtered records
-      final entries = filteredRecords
-          .map((record) => _convertToHistoryEntry(record))
-          .toList();
-
-      // Tambahkan "tidak hadir" untuk workdays yang tidak ada recordnya
-      for (final workday in allWorkdays) {
-        final workdayStr = dateFormat.format(workday);
-        // Skip hari ini jika belum ada check-in
-        if (workdayStr == todayStr) continue;
-
-        if (!filteredDatesWithRecords.contains(workdayStr)) {
-          // Buat virtual absent record
-          final absentRecord = AttendanceRecord(
-            attendanceDate: workdayStr,
-            status: 'alpa',
-            checkInTime: null,
-            checkOutTime: null,
-            checkInLat: null,
-            checkInLng: null,
-            checkOutLat: null,
-            checkOutLng: null,
-            checkInAddress: null,
-            checkOutAddress: null,
-            alasanIzin: null,
-          );
-          entries.add(_convertToHistoryEntry(absentRecord));
-        }
-      }
-
-      // Sort by date descending (newest first)
       entries.sort((a, b) => b.date.compareTo(a.date));
 
       setState(() {
@@ -140,12 +70,94 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  // Menentukan tanggal mulai riwayat berdasarkan tanggal pembuatan akun.
+  Future<DateTime> _resolveHistoryStartDate() async {
+    try {
+      final createdAtStr = await PreferenceHandler.getUserCreatedAt();
+      final parsedDate = createdAtStr == null
+          ? null
+          : DateTime.tryParse(createdAtStr);
+      if (parsedDate == null) {
+        return DateTime.now().subtract(const Duration(days: 365));
+      }
+
+      return DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+    } catch (_) {
+      return DateTime.now().subtract(const Duration(days: 365));
+    }
+  }
+
+  // Menyaring record agar hanya data valid setelah tanggal mulai yang dipakai.
+  List<AttendanceRecord> _filterRecordsFromStartDate(
+    List<AttendanceRecord> records,
+    DateTime startDate,
+  ) {
+    return records.where((record) {
+      if (record.attendanceDate == null) return false;
+
+      final recordDate = DateTime.tryParse(record.attendanceDate!);
+      if (recordDate == null) return false;
+
+      return _isOnOrAfterDate(recordDate, startDate);
+    }).toList();
+  }
+
+  // Menyusun entri riwayat dan menambahkan entri alpa virtual untuk hari kosong.
+  List<_AttendanceHistoryEntry> _buildHistoryEntriesWithVirtualAbsents({
+    required List<AttendanceRecord> filteredRecords,
+    required List<DateTime> allWorkdays,
+    required DateTime endDate,
+    required DateFormat dateFormat,
+  }) {
+    final entries = filteredRecords
+        .map((record) => _convertToHistoryEntry(record))
+        .toList();
+
+    final datesWithRecords = filteredRecords
+        .map((record) => record.attendanceDate!)
+        .toSet();
+    final todayStr = dateFormat.format(endDate);
+
+    for (final workday in allWorkdays) {
+      final workdayStr = dateFormat.format(workday);
+
+      if (workdayStr == todayStr) continue;
+      if (datesWithRecords.contains(workdayStr)) continue;
+
+      final absentRecord = AttendanceRecord(
+        attendanceDate: workdayStr,
+        status: 'alpa',
+        checkInTime: null,
+        checkOutTime: null,
+        checkInLat: null,
+        checkInLng: null,
+        checkOutLat: null,
+        checkOutLng: null,
+        checkInAddress: null,
+        checkOutAddress: null,
+        alasanIzin: null,
+      );
+      entries.add(_convertToHistoryEntry(absentRecord));
+    }
+
+    return entries;
+  }
+
+  // Membandingkan dua tanggal dengan presisi tahun-bulan-hari.
+  bool _isOnOrAfterDate(DateTime date, DateTime targetDate) {
+    return date.year > targetDate.year ||
+        (date.year == targetDate.year && date.month > targetDate.month) ||
+        (date.year == targetDate.year &&
+            date.month == targetDate.month &&
+            date.day >= targetDate.day);
+  }
+
+  // Menghasilkan daftar hari kerja (Senin sampai Jumat) pada rentang tanggal.
   List<DateTime> _generateAllWorkdays(DateTime start, DateTime end) {
     final workdays = <DateTime>[];
     var current = start;
 
     while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      // 1 = Monday, 5 = Friday
       if (current.weekday >= 1 && current.weekday <= 5) {
         workdays.add(current);
       }
@@ -155,6 +167,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     return workdays;
   }
 
+  // Mengubah record absensi mentah menjadi model entri untuk UI riwayat.
   _AttendanceHistoryEntry _convertToHistoryEntry(AttendanceRecord record) {
     final date =
         DateTime.tryParse(record.attendanceDate ?? '') ?? DateTime.now();
@@ -164,16 +177,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     if (record.status == 'izin') {
       detail = 'Izin - ${record.alasanIzin ?? 'Tidak ada keterangan'}';
     } else if (record.checkInTime != null) {
-      // Check if check-in is late (after 08:00)
       if (record.status == 'masuk' && _isCheckInLate(record.checkInTime!)) {
         status = _AttendanceStatus.late;
       }
 
       if (record.checkOutTime != null) {
-        // Tampilkan jam masuk dan jam keluar seperti home screen
         detail = '${record.checkInTime} - ${record.checkOutTime}';
       } else {
-        // Hanya jam masuk
         detail = 'Masuk - ${record.checkInTime}';
       }
     } else {
@@ -188,6 +198,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     );
   }
 
+  // Memetakan status string dari API ke enum status lokal.
   _AttendanceStatus _mapStatusToEnum(String? status) {
     switch (status?.toLowerCase()) {
       case 'masuk':
@@ -204,119 +215,22 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  // Mengecek apakah waktu check-in melewati batas 08:00.
   bool _isCheckInLate(String checkInTime) {
     try {
-      // Parse time format HH:mm:ss or HH:mm
       final parts = checkInTime.split(':');
       if (parts.length < 2) return false;
 
       final hour = int.tryParse(parts[0]) ?? 0;
       final minute = int.tryParse(parts[1]) ?? 0;
 
-      // 08:00:00 = jam 8 pagi, jadi late jika > 08:00
       return hour > 8 || (hour == 8 && minute > 0);
     } catch (_) {
       return false;
     }
   }
 
-  Widget _buildAttendanceItem(_AttendanceHistoryEntry entry) {
-    final formattedDate = DateFormat(
-      'EEEE, d MMMM y',
-      'id_ID',
-    ).format(entry.date);
-
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(
-            builder: (_) => AttendanceDetailScreen(record: entry.record),
-          ),
-        );
-
-        if (result == true) {
-          await _fetchAttendanceHistory();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColor.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: entry.color.withValues(alpha: 0.1),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: entry.color.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: entry.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: entry.color.withValues(alpha: 0.2)),
-              ),
-              child: Icon(entry.icon, color: entry.color, size: 26),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    formattedDate,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColor.textPrimary,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    entry.detail,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: entry.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: entry.color.withValues(alpha: 0.2)),
-              ),
-              child: Text(
-                entry.statusLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: entry.color,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // Membangun tampilan utama halaman riwayat kehadiran.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -399,8 +313,101 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               itemCount: _attendanceHistory.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) =>
-                  _buildAttendanceItem(_attendanceHistory[index]),
+              itemBuilder: (context, index) {
+                final entry = _attendanceHistory[index];
+                final formattedDate = DateFormat(
+                  'EEEE, d MMMM y',
+                  'id_ID',
+                ).format(entry.date);
+
+                return GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AttendanceDetailScreen(record: entry.record),
+                      ),
+                    );
+
+                    if (result == true) {
+                      await _fetchAttendanceHistory();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColor.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: entry.color.withValues(alpha: 0.05),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: entry.color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(entry.icon, color: entry.color, size: 26),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                formattedDate,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColor.textPrimary,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                entry.detail,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: entry.color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            entry.statusLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: entry.color,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
     );
   }
@@ -450,13 +457,13 @@ class _AttendanceHistoryEntry {
   IconData get icon {
     switch (status) {
       case _AttendanceStatus.present:
-        return Icons.check_circle_rounded;
+        return Icons.check_circle;
       case _AttendanceStatus.leave:
-        return Icons.event_busy_rounded;
+        return Icons.event_busy;
       case _AttendanceStatus.late:
-        return Icons.access_time_rounded;
+        return Icons.check_circle;
       case _AttendanceStatus.absent:
-        return Icons.cancel_rounded;
+        return Icons.cancel;
     }
   }
 }

@@ -36,14 +36,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DateTime _currentDateTime = DateTime.now();
   bool _isRefreshing = false;
 
-  // Lifecycle
-
+  // Inisialisasi observer, future, dan pembaruan jam real-time.
   @override
   void initState() {
     super.initState();
     HomeScreen._stateInstance = this;
     WidgetsBinding.instance.addObserver(this);
-    _initializeFutures();
+    _loadHomeFutures(includeProfile: true);
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {
@@ -52,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  // Memuat ulang data saat aplikasi kembali ke foreground.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -59,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Membersihkan timer dan observer lifecycle.
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -67,10 +68,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Refresh and state update
+  // Memuat future untuk profil, riwayat, statistik, dan absensi hari ini.
+  void _loadHomeFutures({bool includeProfile = false}) {
+    if (includeProfile) {
+      _profileFuture = getUser();
+    }
 
-  void _initializeFutures() {
-    _profileFuture = getUser();
     _attendanceHistoryFuture = _loadRecentHistory();
     _attendanceStatsFuture = _loadAttendanceStats();
     final today = DateTime.now();
@@ -80,20 +83,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Melakukan debounce lalu memicu refresh penuh data home.
   void _refresh() {
     if (!mounted || _isRefreshing) return;
 
-    // Cancel previous debounce timer
     _refreshDebounceTimer?.cancel();
 
-    // Debounce: wait 500ms before refreshing to avoid rapid multiple refreshes
     _refreshDebounceTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       setState(() {
         _isRefreshing = true;
-        _initializeFutures();
+        _loadHomeFutures(includeProfile: true);
       });
-      // Reset refresh flag after a delay
+
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() {
@@ -104,21 +106,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  // Memuat ulang future yang terkait absensi saja.
   void _refreshAttendanceData() {
     if (!mounted) return;
-    final today = DateTime.now();
-    final dateFormatter = DateFormat('yyyy-MM-dd');
     setState(() {
-      _attendanceHistoryFuture = _loadRecentHistory();
-      _attendanceStatsFuture = _loadAttendanceStats();
-      _todayAttendanceFuture = getTodayAttendance(
-        attendanceDate: dateFormatter.format(today),
-      );
+      _loadHomeFutures();
     });
   }
 
-  // Data loading and transformation
-
+  // Memuat riwayat absensi terbaru dan menambahkan alpa untuk hari kerja yang kosong.
   Future<List<_AttendanceHistoryEntry>> _loadRecentHistory() async {
     try {
       final today = DateTime.now();
@@ -141,16 +137,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         endDate: endDate,
       );
 
-      // Sort by date descending (newest first)
       entries.sort((a, b) => b.date.compareTo(a.date));
 
       return entries;
     } catch (e) {
-      // Gracefully handle network errors
       return [];
     }
   }
 
+  // Memuat statistik absensi dari tanggal akun dibuat sampai hari ini.
   Future<AttendanceStatsResponse> _loadAttendanceStats() async {
     try {
       final today = DateTime.now();
@@ -167,24 +162,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Menentukan tanggal mulai untuk tampilan riwayat singkat.
   Future<DateTime> _resolveHistoryStartDate(DateTime endDate) async {
     final createdDate = await _getUserCreatedDate();
     if (createdDate == null) {
       return endDate.subtract(const Duration(days: 4));
     }
 
-    // Maksimal tampil 5 hari terakhir, atau lebih sedikit jika akun masih baru.
     final daysSinceCreation = endDate.difference(createdDate).inDays;
     final daysToShow = daysSinceCreation < 5 ? daysSinceCreation : 4;
     return endDate.subtract(Duration(days: daysToShow));
   }
 
+  // Menentukan tanggal mulai untuk perhitungan statistik.
   Future<DateTime> _resolveStatsStartDate(DateTime endDate) async {
     final createdDate = await _getUserCreatedDate();
     if (createdDate != null) return createdDate;
     return endDate.subtract(const Duration(days: 365));
   }
 
+  // Mengambil dan menormalkan tanggal akun dibuat.
   Future<DateTime?> _getUserCreatedDate() async {
     try {
       final createdAtStr = await PreferenceHandler.getUserCreatedAt();
@@ -198,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Mengambil data mentah riwayat absensi pada rentang tanggal.
   Future<List<AttendanceRecord>> _fetchHistoryRecords(
     DateTime startDate,
     DateTime endDate,
@@ -210,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Menyaring record agar hanya tanggal setelah akun dibuat yang dipakai.
   List<AttendanceRecord> _filterRecordsAfterCreatedDate(
     List<AttendanceRecord> records,
     DateTime? createdDate,
@@ -225,6 +224,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }).toList();
   }
 
+  // Membandingkan dua tanggal pada presisi tahun-bulan-hari.
   bool _isOnOrAfterDate(DateTime date, DateTime referenceDate) {
     return date.year > referenceDate.year ||
         (date.year == referenceDate.year && date.month > referenceDate.month) ||
@@ -233,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             date.day >= referenceDate.day);
   }
 
+  // Menambahkan entri alpa virtual untuk hari kerja tanpa record.
   void _appendVirtualAbsentEntries({
     required List<_AttendanceHistoryEntry> entries,
     required List<AttendanceRecord> filteredRecords,
@@ -267,12 +268,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Menghasilkan daftar hari kerja antara tanggal mulai dan akhir.
   List<DateTime> _generateRecentWorkdays(DateTime start, DateTime end) {
     final workdays = <DateTime>[];
     var current = start;
 
     while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      // 1 = Monday, 5 = Friday
       if (current.weekday >= 1 && current.weekday <= 5) {
         workdays.add(current);
       }
@@ -282,6 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return workdays;
   }
 
+  // Memetakan record absensi dari API menjadi entri riwayat untuk UI.
   _AttendanceHistoryEntry _mapRecordToEntry(AttendanceRecord record) {
     final date =
         DateTime.tryParse(record.attendanceDate ?? '') ?? DateTime.now();
@@ -301,7 +303,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     if (checkIn.isNotEmpty && checkOut.isNotEmpty) {
-      // Check if check-in is after 08:00:00
       final isLate = _isCheckInLate(checkIn);
       return _AttendanceHistoryEntry(
         date: date,
@@ -312,7 +313,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     if (checkIn.isNotEmpty) {
-      // Check if check-in is after 08:00:00
       final isLate = _isCheckInLate(checkIn);
       return _AttendanceHistoryEntry(
         date: date,
@@ -322,7 +322,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }
 
-    // Default: tidak hadir (absent)
     return _AttendanceHistoryEntry(
       date: date,
       status: _AttendanceStatus.absent,
@@ -331,24 +330,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Menentukan apakah jam check-in lebih dari 08:00.
   bool _isCheckInLate(String checkInTime) {
     try {
-      // Parse time format HH:mm:ss or HH:mm
       final parts = checkInTime.split(':');
       if (parts.length < 2) return false;
 
       final hour = int.tryParse(parts[0]) ?? 0;
       final minute = int.tryParse(parts[1]) ?? 0;
 
-      // 08:00:00 = jam 8 pagi, jadi late jika > 08:00
       return hour > 8 || (hour == 8 && minute > 0);
     } catch (_) {
       return false;
     }
   }
 
-  // UI helper
-
+  // Membangun image provider avatar dari URL atau sumber base64.
   ImageProvider? _buildAvatarProvider(String? photoUrl) {
     final rawPhoto = (photoUrl ?? '').trim();
     if (rawPhoto.isEmpty) return null;
@@ -378,6 +375,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Membangun tampilan halaman home.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -401,17 +399,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 color: AppColor.textPrimary,
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Sistem Presensi Digital',
-              style: TextStyle(
-                color: AppColor.textSecondary.withValues(alpha: 0.7),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.3,
               ),
             ),
           ],
@@ -833,7 +820,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Attendance Statistics Section
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Statistik Absensi',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColor.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
                 FutureBuilder<AttendanceStatsResponse>(
                   future: _attendanceStatsFuture,
                   builder: (context, snapshot) {
@@ -846,106 +849,82 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     }
 
                     final stats = snapshot.data!.data;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    return Row(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Statistik Absensi',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColor.textPrimary,
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColor.secondary,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'HADIR',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.surface,
+                                    letterSpacing: 1.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                                Text(
+                                  stats.totalMasuk.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.surface,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColor.secondary,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'HADIR',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColor.surface,
-                                        letterSpacing: 1.5,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      stats.totalMasuk.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColor.surface,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColor.warning.withValues(
-                                    alpha: 0.9,
+                            decoration: BoxDecoration(
+                              color: AppColor.warning.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'IZIN',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.textPrimary,
+                                    letterSpacing: 1.5,
                                   ),
-                                  borderRadius: BorderRadius.circular(20),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'IZIN',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColor.textPrimary,
-                                        letterSpacing: 1.5,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      stats.totalIzin.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColor.textPrimary,
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  stats.totalIzin.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.textPrimary,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     );
