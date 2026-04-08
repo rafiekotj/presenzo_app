@@ -242,7 +242,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
-  // Menghitung jarak pengguna (meter) ke titik check in yang ditentukan.
+  // Menghitung jarak pengguna (meter) ke titik absen masuk yang ditentukan.
   double _distanceToCheckInTargetMeters(Position position) {
     return Geolocator.distanceBetween(
       position.latitude,
@@ -263,7 +263,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     if (!_isAtOrAfterHour(_autoCheckOutHour)) return;
 
     final fallbackAddress =
-        'Auto checkout setelah 17:00 (tanpa validasi lokasi)';
+        'Auto absen keluar setelah 17:00 (tanpa validasi lokasi)';
     final checkOutLat = _currentPosition?.latitude ?? _checkInTargetLat;
     final checkOutLng = _currentPosition?.longitude ?? _checkInTargetLng;
     final checkOutAddress = _currentAddress == 'Lokasi belum tersedia'
@@ -290,19 +290,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Auto check out dijalankan karena sudah melewati 17:00.',
+            'Auto absen keluar dijalankan karena sudah melewati 17:00.',
           ),
         ),
       );
       HomeScreen.refresh();
     } catch (_) {
-      // Auto checkout bersifat best effort; kegagalan tidak memblokir alur utama.
+      // Auto absen keluar bersifat best effort; kegagalan tidak memblokir alur utama.
     } finally {
       _isAutoCheckoutRunning = false;
     }
   }
 
-  // Memvalidasi kondisi presensi lalu mengirim request check in, check out, atau izin.
+  // Memvalidasi kondisi presensi lalu mengirim request absen masuk, absen keluar, atau izin.
   Future<void> _submitAttendance() async {
     if (_isSubmitting) return;
 
@@ -321,7 +321,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       return;
     }
 
-    // Validasi radius untuk check in dan check out.
+    // Validasi radius untuk absen masuk dan absen keluar.
     final isCheckInFlow =
         !_canCheckoutToday && _selectedMode == AttendanceMode.hadir;
     final isCheckOutFlow = _canCheckoutToday;
@@ -329,7 +329,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     if (isCheckInFlow && !_isAtOrAfterHour(_checkInStartHour)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Check in hanya bisa dimulai dari jam 05:00.'),
+          content: Text('Absen masuk hanya bisa dimulai dari jam 05:00.'),
         ),
       );
       return;
@@ -338,7 +338,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     if (isCheckOutFlow && !_isAtOrAfterHour(_checkOutStartHour)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Check out hanya bisa dilakukan mulai jam 15:00.'),
+          content: Text('Absen keluar hanya bisa dilakukan mulai jam 15:00.'),
         ),
       );
       return;
@@ -358,7 +358,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final distanceInMeters = _distanceToCheckInTargetMeters(position);
       if (distanceInMeters > _maxCheckInDistanceMeters) {
         final roundedDistance = distanceInMeters.toStringAsFixed(0);
-        final actionLabel = isCheckOutFlow ? 'check out' : 'check in';
+        final actionLabel = isCheckOutFlow ? 'absen keluar' : 'absen masuk';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -470,14 +470,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final statusLabel = _isIzinToday
         ? 'Sudah izin hari ini'
         : ((_todayAttendance?.checkOutTime ?? '').trim().isNotEmpty)
-        ? 'Sudah check out hari ini'
+        ? 'Sudah absen keluar hari ini'
         : ((_todayAttendance?.checkInTime ?? '').trim().isNotEmpty)
-        ? 'Sudah check in hari ini'
+        ? 'Sudah absen masuk hari ini'
         : _hasTodayAttendance
         ? ((_todayAttendance?.status ?? '').toLowerCase() == 'izin')
               ? 'Sudah izin hari ini'
-              : 'Sudah check in hari ini'
-        : 'Belum check in';
+              : 'Sudah absen masuk hari ini'
+        : 'Belum absen masuk';
 
     final statusColor = _isIzinToday
         ? AppColor.warning
@@ -500,13 +500,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final buttonLabel = _isAttendanceCompletedToday
         ? 'Presensi Hari Ini Selesai'
         : (isCheckInFlow && isBeforeCheckInTime)
-        ? 'Check In Mulai 05:00'
+        ? 'Absen Masuk Mulai 05:00'
         : (_canCheckoutToday && isBeforeCheckOutTime)
-        ? 'Check Out Mulai 15:00'
+        ? 'Absen Keluar Mulai 15:00'
         : _canCheckoutToday
-        ? 'Check Out Sekarang'
+        ? 'Absen Keluar Sekarang'
         : _selectedMode == AttendanceMode.hadir
-        ? 'Check In Sekarang'
+        ? 'Absen Masuk Sekarang'
         : 'Ajukan Izin';
 
     return Scaffold(
@@ -671,7 +671,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Check in',
+                                            'Absen masuk',
                                             style: TextStyle(
                                               color: detailTileLabelColor,
                                               fontSize: 10,
@@ -754,7 +754,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Check out',
+                                            'Absen keluar',
                                             style: TextStyle(
                                               color: detailTileLabelColor,
                                               fontSize: 10,

@@ -1,17 +1,15 @@
-class GetBatchModel {
-  final String? message;
-  final BatchData? data;
+import 'package:presenzo_app/models/training_model.dart';
 
-  GetBatchModel({this.message, this.data});
+class BatchOptionItem {
+  final int id;
+  final String label;
+  final List<TrainingOptionItem> trainings;
 
-  factory GetBatchModel.fromJson(Map<String, dynamic> json) => GetBatchModel(
-    message: json['message'] as String?,
-    data: json['data'] == null
-        ? null
-        : BatchData.fromJson(json['data'] as Map<String, dynamic>),
-  );
-
-  Map<String, dynamic> toJson() => {'message': message, 'data': data?.toJson()};
+  const BatchOptionItem({
+    required this.id,
+    required this.label,
+    this.trainings = const [],
+  });
 }
 
 class BatchData {

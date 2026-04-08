@@ -28,7 +28,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
     _prepareMapData();
   }
 
-  // Menyiapkan marker check-in/check-out dan menghitung batas area kamera peta.
+  // Menyiapkan marker absen masuk/absen keluar dan menghitung batas area kamera peta.
   void _prepareMapData() {
     _markers = {};
 
@@ -41,7 +41,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
             widget.record.checkInLng!,
           ),
           infoWindow: InfoWindow(
-            title: 'Check-in',
+            title: 'Absen Masuk',
             snippet: widget.record.checkInTime ?? 'Tidak ada waktu',
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -61,7 +61,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
             widget.record.checkOutLng!,
           ),
           infoWindow: InfoWindow(
-            title: 'Check-out',
+            title: 'Absen Keluar',
             snippet: widget.record.checkOutTime ?? 'Tidak ada waktu',
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
@@ -396,7 +396,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Check-in',
+                    'Absen Masuk',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -488,7 +488,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Check-out',
+                      'Absen Keluar',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,

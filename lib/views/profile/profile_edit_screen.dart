@@ -527,7 +527,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                   const SizedBox(height: 10),
                                   _buildReadOnlyField(
                                     controller: _trainingController,
-                                    hintText: 'Training',
+                                    hintText: 'Jurusan',
                                     prefixIcon: Icons.school_outlined,
                                     disabledFieldOverlay: disabledFieldOverlay,
                                   ),

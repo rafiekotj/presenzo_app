@@ -3,9 +3,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
+import 'package:presenzo_app/models/batch_model.dart';
+import 'package:presenzo_app/models/training_model.dart';
 import 'package:presenzo_app/services/api/batch.dart';
 import 'package:presenzo_app/services/api/register.dart';
-import 'package:presenzo_app/services/api/training.dart';
 import 'package:presenzo_app/views/auth/login_screen.dart';
 import 'package:presenzo_app/widgets/custom_button.dart';
 import 'package:presenzo_app/widgets/custom_dropdown_field.dart';
@@ -263,7 +264,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -343,7 +346,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               CustomDropdownField<String>(
                                 key: _genderDropdownKey,
                                 selectedValue: selectedGender,
-                                hintText: 'Pilih Jenis Kelamin',
+                                hintText: 'Jenis Kelamin',
                                 prefixIcon: Icons.wc_outlined,
                                 menuMaxHeight: 220,
                                 isRequired: true,
@@ -377,7 +380,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               CustomDropdownField<int>(
                                 key: _batchDropdownKey,
                                 selectedValue: selectedBatchId,
-                                hintText: 'Pilih Batch',
+                                hintText: 'Batch',
                                 prefixIcon: Icons.groups_outlined,
                                 menuMaxHeight: 280,
                                 isLoading: isLoadingOptions,
@@ -404,7 +407,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               CustomDropdownField<int>(
                                 key: _trainingDropdownKey,
                                 selectedValue: selectedTrainingId,
-                                hintText: 'Pilih Jurusan',
+                                hintText: 'Jurusan',
                                 prefixIcon: Icons.school_outlined,
                                 menuMaxHeight: 280,
                                 isLoading: isLoadingOptions,
@@ -446,7 +449,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               Text(
                                 'Sudah punya akun? ',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),
@@ -478,6 +483,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
-
-

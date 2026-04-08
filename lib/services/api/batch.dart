@@ -2,21 +2,10 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart' as http;
+import 'package:presenzo_app/models/batch_model.dart';
+import 'package:presenzo_app/models/training_model.dart';
 import 'package:presenzo_app/services/api/endpoint.dart';
-import 'package:presenzo_app/services/api/training.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
-
-class BatchOptionItem {
-  final int id;
-  final String label;
-  final List<TrainingOptionItem> trainings;
-
-  const BatchOptionItem({
-    required this.id,
-    required this.label,
-    this.trainings = const [],
-  });
-}
 
 // Mengambil daftar batch dari server lalu mengubahnya ke format pilihan dropdown.
 Future<List<BatchOptionItem>> getBatches() async {

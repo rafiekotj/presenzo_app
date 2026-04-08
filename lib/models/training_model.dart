@@ -1,18 +1,8 @@
-class GetTrainingModel {
-  final String? message;
-  final TrainingData? data;
+class TrainingOptionItem {
+  final int id;
+  final String label;
 
-  GetTrainingModel({this.message, this.data});
-
-  factory GetTrainingModel.fromJson(Map<String, dynamic> json) =>
-      GetTrainingModel(
-        message: json['message'] as String?,
-        data: json['data'] == null
-            ? null
-            : TrainingData.fromJson(json['data'] as Map<String, dynamic>),
-      );
-
-  Map<String, dynamic> toJson() => {'message': message, 'data': data?.toJson()};
+  const TrainingOptionItem({required this.id, required this.label});
 }
 
 class TrainingData {
