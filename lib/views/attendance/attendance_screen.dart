@@ -39,6 +39,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   bool _isAttendanceCompletedToday = false;
 
   bool _isLoading = true;
+  bool _isMapReady = false;
+  bool _isLocationLoading = false;
   bool _isSubmitting = false;
 
   AttendanceMode _selectedMode = AttendanceMode.hadir;
@@ -129,6 +131,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   /// Mengambil lokasi pengguna, mengubahnya menjadi alamat, lalu memusatkan peta.
   Future<void> _fetchCurrentLocation() async {
+    if (mounted) {
+      setState(() {
+        _isLocationLoading = true;
+      });
+    }
+
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -165,6 +173,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       unawaited(_resolveAddress(position));
     } catch (error) {
       _showErrorMessage(error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLocationLoading = false;
+        });
+      }
     }
   }
 
@@ -365,6 +379,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final currentLatLng = _currentPosition == null
         ? const LatLng(-6.200000, 106.816666)
         : LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    final isMapSectionLoading = !_isMapReady || _isLocationLoading;
     final buttonLabel = _isAttendanceCompletedToday
         ? 'Presensi Hari Ini Selesai'
         : _canCheckoutToday
@@ -716,32 +731,52 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 height: 220,
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-                                  child: GoogleMap(
-                                    initialCameraPosition: CameraPosition(
-                                      target: currentLatLng,
-                                      zoom: 16,
-                                    ),
-                                    myLocationEnabled: true,
-                                    myLocationButtonEnabled: true,
-                                    zoomControlsEnabled: true,
-                                    onMapCreated: (controller) {
-                                      _mapController = controller;
-                                      final position = _currentPosition;
-                                      if (position != null) {
-                                        _focusMapToPosition(position);
-                                      }
-                                    },
-                                    markers: {
-                                      Marker(
-                                        markerId: const MarkerId(
-                                          'current_location',
+                                  child: Stack(
+                                    children: [
+                                      GoogleMap(
+                                        initialCameraPosition: CameraPosition(
+                                          target: currentLatLng,
+                                          zoom: 16,
                                         ),
-                                        position: currentLatLng,
-                                        infoWindow: const InfoWindow(
-                                          title: 'Lokasi Anda',
-                                        ),
+                                        myLocationEnabled: true,
+                                        myLocationButtonEnabled: true,
+                                        zoomControlsEnabled: true,
+                                        onMapCreated: (controller) {
+                                          _mapController = controller;
+                                          if (mounted && !_isMapReady) {
+                                            setState(() {
+                                              _isMapReady = true;
+                                            });
+                                          }
+                                          final position = _currentPosition;
+                                          if (position != null) {
+                                            _focusMapToPosition(position);
+                                          }
+                                        },
+                                        markers: {
+                                          Marker(
+                                            markerId: const MarkerId(
+                                              'current_location',
+                                            ),
+                                            position: currentLatLng,
+                                            infoWindow: const InfoWindow(
+                                              title: 'Lokasi Anda',
+                                            ),
+                                          ),
+                                        },
                                       ),
-                                    },
+                                      if (isMapSectionLoading)
+                                        Positioned.fill(
+                                          child: ColoredBox(
+                                            color: theme.colorScheme.surface
+                                                .withValues(alpha: 0.45),
+                                            child: const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ),
