@@ -338,14 +338,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       backgroundColor: AppColor.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColor.backgroundLight,
+        foregroundColor: AppColor.textPrimary,
         surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 56,
         title: const Text(
           'Presensi',
           style: TextStyle(
             color: AppColor.textPrimary,
             fontWeight: FontWeight.w700,
+            fontSize: 20,
           ),
         ),
         actions: [

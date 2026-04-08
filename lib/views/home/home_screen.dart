@@ -382,13 +382,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       backgroundColor: AppColor.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColor.backgroundLight,
+        foregroundColor: AppColor.textPrimary,
         surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 76,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        titleSpacing: 16,
+        forceMaterialTransparency: true,
+        toolbarHeight: 56,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -397,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               'Presenzo',
               style: TextStyle(
                 color: AppColor.textPrimary,
-                fontSize: 28,
+                fontSize: 20,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -410,16 +410,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColor.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(
-                color: AppColor.surface.withValues(alpha: 0.1),
-              ),
+              border: Border.all(color: AppColor.primary, width: 1.5),
             ),
             child: FutureBuilder<GetUserModel?>(
               future: _profileFuture,
@@ -469,16 +460,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColor.primary.withValues(alpha: 0.25),
-                        blurRadius: 28,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: AppColor.surface.withValues(alpha: 0.15),
-                    ),
                   ),
                   child: Row(
                     children: [
@@ -547,9 +528,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         offset: const Offset(0, 8),
                       ),
                     ],
-                    border: Border.all(
-                      color: AppColor.primary.withValues(alpha: 0.05),
-                    ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

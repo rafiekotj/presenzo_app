@@ -293,7 +293,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       appBar: AppBar(
         backgroundColor: AppColor.backgroundLight,
         foregroundColor: AppColor.textPrimary,
-        title: const Text("Edit Profil"),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 56,
+        title: const Text(
+          'Edit Profil',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
       ),
       body: FutureBuilder<void>(
         future: _initialLoadFuture,

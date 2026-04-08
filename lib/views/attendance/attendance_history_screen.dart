@@ -237,14 +237,17 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       backgroundColor: AppColor.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColor.backgroundLight,
+        foregroundColor: AppColor.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        toolbarHeight: 56,
         title: const Text(
           'Riwayat Kehadiran',
           style: TextStyle(
             color: AppColor.textPrimary,
             fontWeight: FontWeight.w700,
+            fontSize: 20,
           ),
         ),
       ),

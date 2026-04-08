@@ -73,7 +73,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : AppColor.textSecondary;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Profil")),
+      appBar: AppBar(
+        backgroundColor: backgroundColor,
+        foregroundColor: textPrimary,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 56,
+        title: const Text(
+          'Profil',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
+      ),
       backgroundColor: backgroundColor,
       body: FutureBuilder<GetUserModel?>(
         future: _profileFuture,
