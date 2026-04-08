@@ -21,6 +21,13 @@ class AttendanceScreen extends StatefulWidget {
 }
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
+  static const double _checkInTargetLat = -6.2110317;
+  static const double _checkInTargetLng = 106.8126051;
+  static const double _maxCheckInDistanceMeters = 50;
+  static const int _checkInStartHour = 5;
+  static const int _checkOutStartHour = 15;
+  static const int _autoCheckOutHour = 17;
+
   final TextEditingController _reasonController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
   final DateFormat _timeFormat = DateFormat('HH:mm');
@@ -42,6 +49,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   bool _isMapReady = false;
   bool _isLocationLoading = false;
   bool _isSubmitting = false;
+  bool _isAutoCheckoutRunning = false;
 
   AttendanceMode _selectedMode = AttendanceMode.hadir;
 
@@ -104,6 +112,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
 
     _applyAttendanceFlags(todayAttendance);
+    unawaited(_tryAutoCheckoutIfNeeded());
   }
 
   /// Menurunkan seluruh kondisi UI dari data presensi hari ini agar alurnya satu pintu.
@@ -179,6 +188,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           _isLocationLoading = false;
         });
       }
+      unawaited(_tryAutoCheckoutIfNeeded());
     }
   }
 
@@ -232,6 +242,66 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
+  /// Menghitung jarak pengguna (meter) ke titik check in yang ditentukan.
+  double _distanceToCheckInTargetMeters(Position position) {
+    return Geolocator.distanceBetween(
+      position.latitude,
+      position.longitude,
+      _checkInTargetLat,
+      _checkInTargetLng,
+    );
+  }
+
+  bool _isAtOrAfterHour(int hour, {DateTime? now}) {
+    final value = now ?? DateTime.now();
+    return value.hour >= hour;
+  }
+
+  Future<void> _tryAutoCheckoutIfNeeded() async {
+    if (!mounted || _isAutoCheckoutRunning || _isSubmitting) return;
+    if (!_canCheckoutToday) return;
+    if (!_isAtOrAfterHour(_autoCheckOutHour)) return;
+
+    final fallbackAddress =
+        'Auto checkout setelah 17:00 (tanpa validasi lokasi)';
+    final checkOutLat = _currentPosition?.latitude ?? _checkInTargetLat;
+    final checkOutLng = _currentPosition?.longitude ?? _checkInTargetLng;
+    final checkOutAddress = _currentAddress == 'Lokasi belum tersedia'
+        ? fallbackAddress
+        : _currentAddress;
+
+    _isAutoCheckoutRunning = true;
+    try {
+      final now = DateTime.now();
+      final date = _dateFormat.format(now);
+      await checkOutAttendance(
+        attendanceDate: date,
+        checkOut: _timeFormat.format(now),
+        checkOutLat: checkOutLat,
+        checkOutLng: checkOutLng,
+        checkOutAddress: checkOutAddress,
+        status: 'pulang',
+      );
+
+      if (!mounted) return;
+      await _fetchTodayAttendance();
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Auto check out dijalankan karena sudah melewati 17:00.',
+          ),
+        ),
+      );
+      HomeScreen.refresh();
+    } catch (_) {
+      // Auto checkout bersifat best effort; kegagalan tidak memblokir alur utama.
+    } finally {
+      _isAutoCheckoutRunning = false;
+    }
+  }
+
   /// Memvalidasi kondisi presensi lalu mengirim request check in, check out, atau izin.
   Future<void> _submitAttendance() async {
     if (_isSubmitting) return;
@@ -243,21 +313,61 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       return;
     }
 
-    if (_canCheckoutToday && _currentPosition == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lokasi belum siap. Silakan refresh lokasi.'),
-        ),
-      );
-      return;
-    }
-
     if (_selectedMode == AttendanceMode.izin &&
         _reasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Alasan izin wajib diisi.')));
       return;
+    }
+
+    // Validasi radius untuk check in dan check out.
+    final isCheckInFlow =
+        !_canCheckoutToday && _selectedMode == AttendanceMode.hadir;
+    final isCheckOutFlow = _canCheckoutToday;
+
+    if (isCheckInFlow && !_isAtOrAfterHour(_checkInStartHour)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Check in hanya bisa dimulai dari jam 05:00.'),
+        ),
+      );
+      return;
+    }
+
+    if (isCheckOutFlow && !_isAtOrAfterHour(_checkOutStartHour)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Check out hanya bisa dilakukan mulai jam 15:00.'),
+        ),
+      );
+      return;
+    }
+
+    if (isCheckInFlow || isCheckOutFlow) {
+      final position = _currentPosition;
+      if (position == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lokasi belum siap. Silakan refresh lokasi.'),
+          ),
+        );
+        return;
+      }
+
+      final distanceInMeters = _distanceToCheckInTargetMeters(position);
+      if (distanceInMeters > _maxCheckInDistanceMeters) {
+        final roundedDistance = distanceInMeters.toStringAsFixed(0);
+        final actionLabel = isCheckOutFlow ? 'check out' : 'check in';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Anda berada $roundedDistance meter dari titik presensi. Maksimal jarak $actionLabel adalah ${_maxCheckInDistanceMeters.toStringAsFixed(0)} meter.',
+            ),
+          ),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -380,8 +490,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         ? const LatLng(-6.200000, 106.816666)
         : LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
     final isMapSectionLoading = !_isMapReady || _isLocationLoading;
+    final isBeforeCheckInTime = !_isAtOrAfterHour(_checkInStartHour);
+    final isBeforeCheckOutTime = !_isAtOrAfterHour(_checkOutStartHour);
+    final isCheckInFlow =
+        !_canCheckoutToday && _selectedMode == AttendanceMode.hadir;
+    final isActionBlockedByTime =
+        (isCheckInFlow && isBeforeCheckInTime) ||
+        (_canCheckoutToday && isBeforeCheckOutTime);
     final buttonLabel = _isAttendanceCompletedToday
         ? 'Presensi Hari Ini Selesai'
+        : (isCheckInFlow && isBeforeCheckInTime)
+        ? 'Check In Mulai 05:00'
+        : (_canCheckoutToday && isBeforeCheckOutTime)
+        ? 'Check Out Mulai 15:00'
         : _canCheckoutToday
         ? 'Check Out Sekarang'
         : _selectedMode == AttendanceMode.hadir
@@ -939,7 +1060,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           height: 52,
                           child: ElevatedButton.icon(
                             onPressed:
-                                (_isSubmitting || _isAttendanceCompletedToday)
+                                (_isSubmitting ||
+                                    _isAttendanceCompletedToday ||
+                                    isActionBlockedByTime)
                                 ? null
                                 : _submitAttendance,
                             icon: _isSubmitting

@@ -27,6 +27,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  static const int _checkInStartHour = 5;
+  static const int _checkOutStartHour = 15;
+
   late Future<GetUserModel?> _profileFuture;
   late Future<List<_AttendanceHistoryEntry>> _attendanceHistoryFuture;
   late Future<AttendanceApiResponse> _todayAttendanceFuture;
@@ -579,6 +582,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       FutureBuilder<AttendanceApiResponse>(
                         future: _todayAttendanceFuture,
                         builder: (context, attendanceSnapshot) {
+                          final todayStatus =
+                              (attendanceSnapshot.data?.data?.status ?? '')
+                                  .toLowerCase()
+                                  .trim();
+                          final isIzinToday = todayStatus == 'izin';
                           final hasCheckIn =
                               (attendanceSnapshot.data?.data?.checkInTime ?? '')
                                   .trim()
@@ -588,12 +596,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       '')
                                   .trim()
                                   .isNotEmpty;
+                          final isCheckInTimeAllowed =
+                              _currentDateTime.hour >= _checkInStartHour;
+                          final isCheckOutTimeAllowed =
+                              _currentDateTime.hour >= _checkOutStartHour;
 
                           final isCheckInEnabled =
+                              !isIzinToday &&
+                              isCheckInTimeAllowed &&
                               !hasCheckIn &&
                               attendanceSnapshot.connectionState ==
                                   ConnectionState.done;
                           final isCheckOutEnabled =
+                              !isIzinToday &&
+                              isCheckOutTimeAllowed &&
                               hasCheckIn &&
                               !hasCheckOut &&
                               attendanceSnapshot.connectionState ==
