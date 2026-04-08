@@ -10,7 +10,7 @@ class AppColor {
   static const Color backgroundLight = Color(0xFFFCFDFD);
   static const Color backgroundDark = Color(0xFF0B1F1A);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color fieldFill = Color(0xFFF0FDF9);
+  static const Color fieldFill = Color(0xFFF3F4F6);
 
   // Text
   static const Color textPrimary = Color(0xFF0F2A25);

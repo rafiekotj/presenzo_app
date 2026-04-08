@@ -132,7 +132,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  left: 44,
+                  left: widget.prefixIcon != null ? 44 : 12,
                   top: floatLabel ? 10 : 20,
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 180),

@@ -26,7 +26,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   final DateFormat _timeFormat = DateFormat('HH:mm');
 
   Timer? _clockTimer;
-  DateTime _now = DateTime.now();
+  final ValueNotifier<DateTime> _nowNotifier = ValueNotifier(DateTime.now());
 
   GoogleMapController? _mapController;
   Position? _currentPosition;
@@ -48,10 +48,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   void initState() {
     super.initState();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        _now = DateTime.now();
-      });
+      _nowNotifier.value = DateTime.now();
     });
     _loadInitialData();
   }
@@ -68,6 +65,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     _reasonController.dispose();
     _mapController?.dispose();
     _clockTimer?.cancel();
+    _nowNotifier.dispose();
     super.dispose();
   }
 
@@ -77,13 +75,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       _isLoading = true;
     });
 
-    await _logActiveToken();
-    await Future.wait([_fetchCurrentLocation(), _fetchTodayAttendance()]);
+    unawaited(_logActiveToken());
+    await _fetchTodayAttendance();
 
     if (!mounted) return;
     setState(() {
       _isLoading = false;
     });
+
+    // Lokasi dan reverse geocoding dijalankan di belakang layar agar layar cepat muncul.
+    unawaited(_fetchCurrentLocation());
   }
 
   /// Mengambil data presensi hari ini lalu menerapkan semua flag status ke state.
@@ -146,37 +147,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
+          accuracy: LocationAccuracy.medium,
         ),
+        timeLimit: const Duration(seconds: 5),
       );
 
       String address =
           'Lat ${position.latitude.toStringAsFixed(6)}, Lng ${position.longitude.toStringAsFixed(6)}';
-
-      try {
-        final places = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude,
-        );
-
-        if (places.isNotEmpty) {
-          final place = places.first;
-          final parts = <String>[
-            if ((place.street ?? '').trim().isNotEmpty)
-              (place.street ?? '').trim(),
-            if ((place.subLocality ?? '').trim().isNotEmpty)
-              (place.subLocality ?? '').trim(),
-            if ((place.locality ?? '').trim().isNotEmpty)
-              (place.locality ?? '').trim(),
-            if ((place.administrativeArea ?? '').trim().isNotEmpty)
-              (place.administrativeArea ?? '').trim(),
-          ];
-
-          if (parts.isNotEmpty) {
-            address = parts.join(', ');
-          }
-        }
-      } catch (_) {}
 
       if (!mounted) return;
       setState(() {
@@ -185,8 +162,39 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       });
 
       await _focusMapToPosition(position);
+      unawaited(_resolveAddress(position));
     } catch (error) {
       _showErrorMessage(error);
+    }
+  }
+
+  Future<void> _resolveAddress(Position position) async {
+    try {
+      final places = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (places.isEmpty || !mounted) return;
+
+      final place = places.first;
+      final parts = <String>[
+        if ((place.street ?? '').trim().isNotEmpty) (place.street ?? '').trim(),
+        if ((place.subLocality ?? '').trim().isNotEmpty)
+          (place.subLocality ?? '').trim(),
+        if ((place.locality ?? '').trim().isNotEmpty)
+          (place.locality ?? '').trim(),
+        if ((place.administrativeArea ?? '').trim().isNotEmpty)
+          (place.administrativeArea ?? '').trim(),
+      ];
+
+      if (parts.isEmpty) return;
+
+      setState(() {
+        _currentAddress = parts.join(', ');
+      });
+    } catch (_) {
+      // Biarkan fallback lat/lng jika reverse geocoding gagal.
     }
   }
 
@@ -343,6 +351,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
+        centerTitle: true,
         title: const Text(
           'Presensi',
           style: TextStyle(
@@ -359,13 +368,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               color: AppColor.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(
-              DateFormat('HH:mm:ss').format(_now),
-              style: const TextStyle(
-                color: AppColor.primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
+            child: ValueListenableBuilder<DateTime>(
+              valueListenable: _nowNotifier,
+              builder: (context, now, _) {
+                return Text(
+                  DateFormat('HH:mm:ss').format(now),
+                  style: const TextStyle(
+                    color: AppColor.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -532,41 +546,87 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColor.backgroundLight,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Status',
-                                      style: TextStyle(
-                                        color: AppColor.textSecondary,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.backgroundLight,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Status',
+                                            style: TextStyle(
+                                              color: AppColor.textSecondary,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            (_todayAttendance?.status ??
+                                                    'belum absen')
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              color: AppColor.textPrimary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      (_todayAttendance?.status ??
-                                              'belum absen')
-                                          .toUpperCase(),
-                                      style: const TextStyle(
-                                        color: AppColor.textPrimary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      decoration: BoxDecoration(
+                                        color: AppColor.backgroundLight,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Check out',
+                                            style: TextStyle(
+                                              color: AppColor.textSecondary,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            _todayAttendance?.checkOutTime ??
+                                                '-',
+                                            style: const TextStyle(
+                                              color: AppColor.textPrimary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

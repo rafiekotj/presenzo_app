@@ -191,6 +191,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
+        centerTitle: true,
         title: const Text(
           'Detail Kehadiran',
           style: TextStyle(

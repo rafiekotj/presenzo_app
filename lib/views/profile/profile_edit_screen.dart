@@ -297,6 +297,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
+        centerTitle: true,
         title: const Text(
           'Edit Profil',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),

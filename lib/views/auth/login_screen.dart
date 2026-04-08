@@ -166,15 +166,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const Spacer(),
-                          const Center(
-                            child: Text(
-                              'presenzo',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                                color: AppColor.textPrimary,
-                                letterSpacing: -0.8,
-                              ),
+                          Center(
+                            child: Image.asset(
+                              'assets/icons/presenzo_name.png',
+                              height: 84,
+                              fit: BoxFit.contain,
                             ),
                           ),
                           const SizedBox(height: 28),

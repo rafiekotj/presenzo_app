@@ -242,6 +242,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
+        centerTitle: true,
         title: const Text(
           'Riwayat Kehadiran',
           style: TextStyle(
