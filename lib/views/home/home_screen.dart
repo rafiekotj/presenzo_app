@@ -858,7 +858,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   future: _attendanceStatsFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColor.primary,
+                          strokeWidth: 3.5,
+                        ),
+                      );
                     }
 
                     if (snapshot.hasError || !snapshot.hasData) {
@@ -996,7 +1001,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         child: Center(
                           child: CircularProgressIndicator(
                             color: AppColor.primary,
-                            strokeWidth: 2.5,
+                            strokeWidth: 3.5,
                           ),
                         ),
                       );

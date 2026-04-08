@@ -529,7 +529,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: AppColor.primary,
+                strokeWidth: 3.5,
+              ),
+            )
           : Column(
               children: [
                 Expanded(
@@ -892,8 +897,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                             color: theme.colorScheme.surface
                                                 .withValues(alpha: 0.45),
                                             child: const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
+                                              child: CircularProgressIndicator(
+                                                color: AppColor.primary,
+                                                strokeWidth: 3.5,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -1070,8 +1077,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     width: 16,
                                     height: 16,
                                     child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColor.textOnPrimary,
+                                      strokeWidth: 3.5,
+                                      color: AppColor.primary,
                                     ),
                                   )
                                 : Icon(

@@ -254,18 +254,17 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColor.primary),
+              child: CircularProgressIndicator(
+                color: AppColor.primary,
+                strokeWidth: 3.5,
+              ),
             )
           : _errorMessage != null
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: AppColor.error,
-                  ),
+                  Icon(Icons.error_outline, size: 48, color: AppColor.error),
                   const SizedBox(height: 16),
                   Text(
                     'Gagal memuat data',
@@ -300,7 +299,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   Icon(
                     Icons.history,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -342,13 +343,15 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
-                        BoxShadow(
-                          color: entry.color.withValues(alpha: 0.05),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: Theme.of(context).brightness == Brightness.dark
+                          ? const []
+                          : [
+                              BoxShadow(
+                                color: entry.color.withValues(alpha: 0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                     ),
                     child: Row(
                       children: [
@@ -371,7 +374,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   letterSpacing: 0.3,
                                 ),
                               ),
@@ -381,7 +386,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -471,9 +478,3 @@ class _AttendanceHistoryEntry {
     }
   }
 }
-
-
-
-
-
-

@@ -570,8 +570,8 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColor.textOnPrimary,
+                          strokeWidth: 3.5,
+                          color: AppColor.primary,
                         ),
                       )
                     : Icon(Icons.delete_outline),

@@ -360,7 +360,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: AppColor.secondary),
+              child: CircularProgressIndicator(
+                color: AppColor.primary,
+                strokeWidth: 3.5,
+              ),
             );
           }
 
@@ -475,7 +478,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                                       ),
                                                       child:
                                                           CircularProgressIndicator(
-                                                            strokeWidth: 2,
+                                                            strokeWidth: 3.5,
                                                             color: AppColor
                                                                 .primary,
                                                           ),

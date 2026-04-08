@@ -108,7 +108,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                color: AppColor.primary,
+                strokeWidth: 3.5,
+              ),
+            );
           }
 
           final user = snapshot.data?.data;

@@ -141,7 +141,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (isCheckingSession) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: Center(child: CircularProgressIndicator(color: AppColor.primary)),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AppColor.primary,
+            strokeWidth: 3.5,
+          ),
+        ),
       );
     }
 
