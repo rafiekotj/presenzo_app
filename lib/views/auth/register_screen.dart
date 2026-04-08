@@ -35,7 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
   bool isLoadingOptions = true;
 
-  List<TrainingOptionItem> trainings = const [];
   List<BatchOptionItem> batches = const [];
   List<DropdownMenuItem<int>> trainingMenuItems = const [];
   List<DropdownMenuItem<int>> batchMenuItems = const [];
@@ -76,30 +75,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
         .toList();
   }
 
-  /// Memuat data training dan batch lalu mengubahnya menjadi item dropdown.
+  List<TrainingOptionItem> _getTrainingsByBatch(int? batchId) {
+    if (batchId == null) {
+      return const [];
+    }
+
+    for (final batch in batches) {
+      if (batch.id == batchId) {
+        return batch.trainings;
+      }
+    }
+
+    return const [];
+  }
+
+  void _handleBatchChanged(int? batchId) {
+    final nextTrainings = _getTrainingsByBatch(batchId);
+    final isSelectedTrainingStillAvailable = nextTrainings.any(
+      (item) => item.id == selectedTrainingId,
+    );
+
+    setState(() {
+      selectedBatchId = batchId;
+      trainingMenuItems = _buildMenuItems<TrainingOptionItem>(
+        nextTrainings,
+        idSelector: (item) => item.id,
+        labelSelector: (item) => item.label,
+      );
+
+      if (!isSelectedTrainingStillAvailable) {
+        selectedTrainingId = null;
+      }
+    });
+  }
+
+  /// Memuat data batch lalu mengubahnya menjadi item dropdown.
   Future<void> _loadDropdownOptions() async {
     setState(() {
       isLoadingOptions = true;
     });
 
     try {
-      final loadedTrainings = await getTrainings();
       final loadedBatches = await getBatches();
       if (!mounted) return;
 
       setState(() {
-        trainings = loadedTrainings;
         batches = loadedBatches;
-        trainingMenuItems = _buildMenuItems<TrainingOptionItem>(
-          trainings,
-          idSelector: (item) => item.id,
-          labelSelector: (item) => item.label,
-        );
         batchMenuItems = _buildMenuItems<BatchOptionItem>(
           batches,
           idSelector: (item) => item.id,
           labelSelector: (item) => item.label,
         );
+        trainingMenuItems = const [];
       });
     } catch (e) {
       _showMessage('Gagal memuat pilihan training/batch. Silakan coba lagi.');
@@ -371,11 +398,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     : batchMenuItems,
                                 onChanged: isLoadingOptions
                                     ? null
-                                    : (value) {
-                                        setState(() {
-                                          selectedBatchId = value;
-                                        });
-                                      },
+                                    : _handleBatchChanged,
                               ),
                               const SizedBox(height: 10),
                               CustomDropdownField<int>(

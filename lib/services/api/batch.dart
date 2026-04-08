@@ -3,13 +3,19 @@ import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:presenzo_app/services/api/endpoint.dart';
+import 'package:presenzo_app/services/api/training.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
 
 class BatchOptionItem {
   final int id;
   final String label;
+  final List<TrainingOptionItem> trainings;
 
-  const BatchOptionItem({required this.id, required this.label});
+  const BatchOptionItem({
+    required this.id,
+    required this.label,
+    this.trainings = const [],
+  });
 }
 
 // Mengambil daftar batch dari server lalu mengubahnya ke format pilihan dropdown.
@@ -56,7 +62,11 @@ Future<List<BatchOptionItem>> getBatches() async {
         }
 
         final label = _readLabel(item) ?? 'Batch $id';
-        return BatchOptionItem(id: id, label: label);
+        return BatchOptionItem(
+          id: id,
+          label: label,
+          trainings: _readTrainings(item),
+        );
       })
       .whereType<BatchOptionItem>()
       .toList();
@@ -72,5 +82,40 @@ String? _readLabel(Map<String, dynamic> item) {
       return value;
     }
   }
+  return null;
+}
+
+List<TrainingOptionItem> _readTrainings(Map<String, dynamic> item) {
+  final rawTrainings = item['trainings'];
+  if (rawTrainings is! List) {
+    return const [];
+  }
+
+  return rawTrainings
+      .whereType<Map<String, dynamic>>()
+      .map((training) {
+        final idValue = training['id'];
+        final id = idValue is int ? idValue : int.tryParse('$idValue');
+        if (id == null) {
+          return null;
+        }
+
+        final label = _readTrainingLabel(training) ?? 'Training $id';
+        return TrainingOptionItem(id: id, label: label);
+      })
+      .whereType<TrainingOptionItem>()
+      .toList();
+}
+
+String? _readTrainingLabel(Map<String, dynamic> item) {
+  const candidates = ['name', 'nama', 'title', 'training_name'];
+
+  for (final key in candidates) {
+    final value = item[key];
+    if (value is String && value.trim().isNotEmpty) {
+      return value;
+    }
+  }
+
   return null;
 }
