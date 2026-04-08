@@ -372,26 +372,26 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                     child: Stack(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.all(4),
+                                          width: 124,
+                                          height: 124,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: AppColor.primary,
-                                              width: 2,
-                                            ),
+                                            color: AppColor.primary,
                                           ),
-                                          child: CircleAvatar(
-                                            radius: 44,
-                                            backgroundColor:
-                                                AppColor.primarySoft,
-                                            backgroundImage: avatarProvider,
-                                            child: avatarProvider == null
-                                                ? const Icon(
-                                                    Icons.person,
-                                                    size: 44,
-                                                    color: AppColor.primary,
-                                                  )
-                                                : null,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(4),
+                                            child: CircleAvatar(
+                                              backgroundColor:
+                                                  AppColor.primarySoft,
+                                              backgroundImage: avatarProvider,
+                                              child: avatarProvider == null
+                                                  ? const Icon(
+                                                      Icons.person,
+                                                      size: 56,
+                                                      color: AppColor.primary,
+                                                    )
+                                                  : null,
+                                            ),
                                           ),
                                         ),
                                         Positioned(
@@ -437,7 +437,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 40),
                                   AbsorbPointer(
                                     child: Stack(
                                       children: [

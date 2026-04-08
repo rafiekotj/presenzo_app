@@ -18,6 +18,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<GetUserModel?> _profileFuture;
+  bool _isDarkModePreview = false;
 
   @override
   void initState() {
@@ -62,30 +63,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColor.backgroundDark
-        : AppColor.backgroundLight;
-    final surfaceColor = isDark ? const Color(0xFF1E293B) : AppColor.surface;
-    final textPrimary = isDark ? AppColor.surface : AppColor.textPrimary;
-    final textSecondary = isDark
-        ? const Color(0xFFCBD5E1)
-        : AppColor.textSecondary;
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: backgroundColor,
-        foregroundColor: textPrimary,
+        backgroundColor: AppColor.backgroundLight,
+        foregroundColor: AppColor.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
+        centerTitle: true,
         title: const Text(
           'Profil',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
       ),
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColor.backgroundLight,
       body: FutureBuilder<GetUserModel?>(
         future: _profileFuture,
         builder: (context, snapshot) {
@@ -104,52 +96,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        width: 124,
-                        height: 124,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.primary.withValues(alpha: 0.14),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: CircleAvatar(
-                            backgroundColor: AppColor.primarySoft,
-                            backgroundImage: avatarProvider,
-                            child: avatarProvider == null
-                                ? const Icon(
-                                    Icons.person,
-                                    color: AppColor.primary,
-                                    size: 56,
-                                  )
-                                : null,
-                          ),
-                        ),
+                  child: Container(
+                    width: 124,
+                    height: 124,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColor.primary,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: CircleAvatar(
+                        backgroundColor: AppColor.primarySoft,
+                        backgroundImage: avatarProvider,
+                        child: avatarProvider == null
+                            ? const Icon(
+                                Icons.person,
+                                color: AppColor.primary,
+                                size: 56,
+                              )
+                            : null,
                       ),
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.primary.withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.verified_rounded,
-                          color: AppColor.primary,
-                          size: 20,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -159,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: textPrimary,
+                      color: AppColor.textPrimary,
                     ),
                   ),
                 ),
@@ -167,40 +134,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.badge_outlined, size: 16, color: textSecondary),
+                    Icon(
+                      Icons.email_outlined,
+                      size: 16,
+                      color: AppColor.textSecondary,
+                      fill: 1,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       email,
-                      style: TextStyle(fontSize: 12, color: textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColor.textSecondary,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColor.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: const Text(
-                      'Akun Presensi',
-                      style: TextStyle(
-                        color: AppColor.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 40),
                 Text(
                   'PENGATURAN AKUN',
                   style: TextStyle(
-                    color: textSecondary,
+                    color: AppColor.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
@@ -222,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: surfaceColor,
+                      color: AppColor.surface,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -252,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Edit Profil',
                                 style: TextStyle(
-                                  color: textPrimary,
+                                  color: AppColor.textPrimary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -261,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Ubah informasi akun dan foto profil',
                                 style: TextStyle(
-                                  color: textSecondary,
+                                  color: AppColor.textPrimary,
                                   fontSize: 12,
                                 ),
                               ),
@@ -271,10 +225,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
-                          color: textSecondary,
+                          color: AppColor.textSecondary,
                         ),
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColor.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColor.primary.withValues(alpha: 0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppColor.secondary.withValues(
+                          alpha: 0.12,
+                        ),
+                        child: const Icon(
+                          Icons.dark_mode_outlined,
+                          color: AppColor.secondary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dark Mode',
+                              style: TextStyle(
+                                color: AppColor.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Atur tampilan mode gelap aplikasi',
+                              style: TextStyle(
+                                color: AppColor.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: _isDarkModePreview,
+                        activeColor: AppColor.primary,
+                        onChanged: (value) {
+                          setState(() {
+                            _isDarkModePreview = value;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -288,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: surfaceColor,
+                      color: AppColor.surface,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -318,7 +334,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Logout',
                                 style: TextStyle(
-                                  color: textPrimary,
+                                  color: AppColor.textPrimary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -327,7 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Keluar aman dari sesi akun saat ini',
                                 style: TextStyle(
-                                  color: textSecondary,
+                                  color: AppColor.textSecondary,
                                   fontSize: 12,
                                 ),
                               ),
@@ -337,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
-                          color: textSecondary,
+                          color: AppColor.textSecondary,
                         ),
                       ],
                     ),
