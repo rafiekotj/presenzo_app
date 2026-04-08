@@ -312,6 +312,37 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   /// Menyusun seluruh tampilan halaman presensi berdasarkan state saat ini.
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final detailTileBackground = isDarkMode
+        ? AppColor.fieldFillDark
+        : AppColor.backgroundLight;
+    final detailTileLabelColor = isDarkMode
+        ? colorScheme.onSurface.withValues(alpha: 0.9)
+        : colorScheme.onSurfaceVariant;
+    final bottomBarBackground = isDarkMode
+        ? colorScheme.surface
+        : AppColor.backgroundLight;
+    final selectedChipBackground = isDarkMode
+        ? AppColor.primarySoft.withValues(alpha: 0.92)
+        : AppColor.primary.withValues(alpha: 0.18);
+    final selectedChipBorder = isDarkMode
+        ? AppColor.primarySoft
+        : AppColor.primary.withValues(alpha: 0.55);
+    final selectedChipTextColor = isDarkMode
+        ? AppColor.backgroundDark
+        : AppColor.primary;
+    final unselectedChipBackground = isDarkMode
+        ? AppColor.fieldFillDark
+        : theme.scaffoldBackgroundColor;
+    final unselectedChipBorder = isDarkMode
+        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.35)
+        : AppColor.border.withValues(alpha: 0.5);
+    final unselectedChipTextColor = isDarkMode
+        ? colorScheme.onSurface.withValues(alpha: 0.9)
+        : colorScheme.onSurfaceVariant;
+
     final statusLabel = _isIzinToday
         ? 'Sudah izin hari ini'
         : ((_todayAttendance?.checkOutTime ?? '').trim().isNotEmpty)
@@ -343,46 +374,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         : 'Ajukan Izin';
 
     return Scaffold(
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColor.backgroundLight,
-        foregroundColor: AppColor.textPrimary,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        foregroundColor: colorScheme.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Presensi',
           style: TextStyle(
-            color: AppColor.textPrimary,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColor.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ValueListenableBuilder<DateTime>(
-              valueListenable: _nowNotifier,
-              builder: (context, now, _) {
-                return Text(
-                  DateFormat('HH:mm:ss').format(now),
-                  style: const TextStyle(
-                    color: AppColor.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -398,15 +406,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColor.surface,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: statusColor.withValues(alpha: 0.08),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
+                            boxShadow:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? const []
+                                : [
+                                    BoxShadow(
+                                      color: statusColor.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,10 +445,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                   Expanded(
                                     child: Text(
                                       'Status Presensi',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColor.textPrimary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                     ),
                                   ),
@@ -471,17 +486,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                         vertical: 10,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColor.backgroundLight,
+                                        color: detailTileBackground,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Tanggal',
                                             style: TextStyle(
-                                              color: AppColor.textSecondary,
+                                              color: detailTileLabelColor,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -492,8 +507,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                                 _dateFormat.format(
                                                   DateTime.now(),
                                                 ),
-                                            style: const TextStyle(
-                                              color: AppColor.textPrimary,
+                                            style: TextStyle(
+                                              color: colorScheme.onSurface,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -512,17 +527,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                         vertical: 10,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColor.backgroundLight,
+                                        color: detailTileBackground,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Check in',
                                             style: TextStyle(
-                                              color: AppColor.textSecondary,
+                                              color: detailTileLabelColor,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -531,8 +546,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           Text(
                                             _todayAttendance?.checkInTime ??
                                                 '-',
-                                            style: const TextStyle(
-                                              color: AppColor.textPrimary,
+                                            style: TextStyle(
+                                              color: colorScheme.onSurface,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -555,17 +570,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                         vertical: 10,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColor.backgroundLight,
+                                        color: detailTileBackground,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Status',
                                             style: TextStyle(
-                                              color: AppColor.textSecondary,
+                                              color: detailTileLabelColor,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -575,8 +590,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                             (_todayAttendance?.status ??
                                                     'belum absen')
                                                 .toUpperCase(),
-                                            style: const TextStyle(
-                                              color: AppColor.textPrimary,
+                                            style: TextStyle(
+                                              color: colorScheme.onSurface,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -595,17 +610,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                         vertical: 10,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColor.backgroundLight,
+                                        color: detailTileBackground,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Check out',
                                             style: TextStyle(
-                                              color: AppColor.textSecondary,
+                                              color: detailTileLabelColor,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -614,8 +629,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           Text(
                                             _todayAttendance?.checkOutTime ??
                                                 '-',
-                                            style: const TextStyle(
-                                              color: AppColor.textPrimary,
+                                            style: TextStyle(
+                                              color: colorScheme.onSurface,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -635,15 +650,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColor.surface,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColor.primary.withValues(alpha: 0.08),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
+                            boxShadow:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? const []
+                                : [
+                                    BoxShadow(
+                                      color: AppColor.primary.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,20 +679,22 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.my_location,
                                       color: AppColor.primary,
                                       size: 20,
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
                                       'Lokasi Saat Ini',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColor.textPrimary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                     ),
                                   ),
@@ -681,8 +703,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 _currentAddress,
-                                style: const TextStyle(
-                                  color: AppColor.textSecondary,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                   height: 1.4,
                                 ),
@@ -734,14 +758,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     decoration: BoxDecoration(
-                      color: AppColor.backgroundLight,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColor.primary.withValues(alpha: 0.06),
-                          blurRadius: 20,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
+                      color: bottomBarBackground,
+                      boxShadow: isDarkMode
+                          ? const []
+                          : [
+                              BoxShadow(
+                                color: AppColor.primary.withValues(alpha: 0.06),
+                                blurRadius: 20,
+                                offset: const Offset(0, -4),
+                              ),
+                            ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -750,29 +776,35 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             !_isAttendanceCompletedToday) ...[
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.only(top: 4),
                             decoration: BoxDecoration(
-                              color: AppColor.surface,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColor.primary.withValues(
-                                    alpha: 0.08,
-                                  ),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
+                              boxShadow:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const []
+                                  : [
+                                      BoxShadow(
+                                        color: AppColor.primary.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Pilih Presensi',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColor.textPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -783,19 +815,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                       selected:
                                           _selectedMode == AttendanceMode.hadir,
                                       showCheckmark: false,
-                                      selectedColor: AppColor.primary
-                                          .withValues(alpha: 0.14),
-                                      backgroundColor: AppColor.backgroundLight,
+                                      selectedColor: selectedChipBackground,
+                                      backgroundColor: unselectedChipBackground,
                                       side: BorderSide(
                                         color:
                                             _selectedMode ==
                                                 AttendanceMode.hadir
-                                            ? AppColor.primary.withValues(
-                                                alpha: 0.4,
-                                              )
-                                            : AppColor.border.withValues(
-                                                alpha: 0.5,
-                                              ),
+                                            ? selectedChipBorder
+                                            : unselectedChipBorder,
+                                        width:
+                                            _selectedMode ==
+                                                AttendanceMode.hadir
+                                            ? 1.4
+                                            : 1,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -806,8 +838,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           color:
                                               _selectedMode ==
                                                   AttendanceMode.hadir
-                                              ? AppColor.primary
-                                              : AppColor.textSecondary,
+                                              ? selectedChipTextColor
+                                              : unselectedChipTextColor,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -821,18 +853,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                       selected:
                                           _selectedMode == AttendanceMode.izin,
                                       showCheckmark: false,
-                                      selectedColor: AppColor.primary
-                                          .withValues(alpha: 0.14),
-                                      backgroundColor: AppColor.backgroundLight,
+                                      selectedColor: selectedChipBackground,
+                                      backgroundColor: unselectedChipBackground,
                                       side: BorderSide(
                                         color:
                                             _selectedMode == AttendanceMode.izin
-                                            ? AppColor.primary.withValues(
-                                                alpha: 0.4,
-                                              )
-                                            : AppColor.border.withValues(
-                                                alpha: 0.5,
-                                              ),
+                                            ? selectedChipBorder
+                                            : unselectedChipBorder,
+                                        width:
+                                            _selectedMode == AttendanceMode.izin
+                                            ? 1.4
+                                            : 1,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -843,8 +874,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           color:
                                               _selectedMode ==
                                                   AttendanceMode.izin
-                                              ? AppColor.primary
-                                              : AppColor.textSecondary,
+                                              ? selectedChipTextColor
+                                              : unselectedChipTextColor,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -899,10 +930,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                               backgroundColor: AppColor.primary,
                               foregroundColor: AppColor.textOnPrimary,
                               disabledBackgroundColor: AppColor.divider,
-                              elevation: 6,
-                              shadowColor: AppColor.primary.withValues(
-                                alpha: 0.3,
-                              ),
+                              elevation: isDarkMode ? 0 : 6,
+                              shadowColor: isDarkMode
+                                  ? Colors.transparent
+                                  : AppColor.primary.withValues(alpha: 0.3),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),

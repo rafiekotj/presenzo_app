@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
+import 'package:presenzo_app/core/theme/app_theme_controller.dart';
 import 'package:presenzo_app/models/get_model.dart';
 import 'package:presenzo_app/services/api/get_user.dart';
 import 'package:presenzo_app/services/storage/preference.dart';
@@ -18,7 +19,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<GetUserModel?> _profileFuture;
-  bool _isDarkModePreview = false;
 
   @override
   void initState() {
@@ -63,21 +63,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.colorScheme.surface;
+    final primaryText = theme.colorScheme.onSurface;
+    final secondaryText = isDark
+        ? const Color(0xFFB9C6C2)
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+    final cardShadowColor = (isDark ? Colors.black : AppColor.primary)
+        .withValues(alpha: isDark ? 0.28 : 0.08);
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColor.backgroundLight,
-        foregroundColor: AppColor.textPrimary,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: primaryText,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Profil',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: primaryText,
+          ),
         ),
       ),
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: FutureBuilder<GetUserModel?>(
         future: _profileFuture,
         builder: (context, snapshot) {
@@ -109,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         backgroundColor: AppColor.primarySoft,
                         backgroundImage: avatarProvider,
                         child: avatarProvider == null
-                            ? const Icon(
+                            ? Icon(
                                 Icons.person,
                                 color: AppColor.primary,
                                 size: 56,
@@ -126,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: AppColor.textPrimary,
+                      color: primaryText,
                     ),
                   ),
                 ),
@@ -137,16 +151,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Icon(
                       Icons.email_outlined,
                       size: 16,
-                      color: AppColor.textSecondary,
+                      color: secondaryText,
                       fill: 1,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       email,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColor.textSecondary,
-                      ),
+                      style: TextStyle(fontSize: 12, color: secondaryText),
                     ),
                   ],
                 ),
@@ -154,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   'PENGATURAN AKUN',
                   style: TextStyle(
-                    color: AppColor.textSecondary,
+                    color: secondaryText,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
@@ -176,11 +187,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColor.surface,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
+                      boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
                         BoxShadow(
-                          color: AppColor.primary.withValues(alpha: 0.08),
+                          color: cardShadowColor,
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -193,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundColor: AppColor.primary.withValues(
                             alpha: 0.12,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.edit_outlined,
                             color: AppColor.primary,
                           ),
@@ -206,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Edit Profil',
                                 style: TextStyle(
-                                  color: AppColor.textPrimary,
+                                  color: primaryText,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -215,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Ubah informasi akun dan foto profil',
                                 style: TextStyle(
-                                  color: AppColor.textPrimary,
+                                  color: secondaryText,
                                   fontSize: 12,
                                 ),
                               ),
@@ -225,7 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
-                          color: AppColor.textSecondary,
+                          color: secondaryText,
                         ),
                       ],
                     ),
@@ -235,11 +246,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColor.surface,
+                    color: cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
+                    boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
                       BoxShadow(
-                        color: AppColor.primary.withValues(alpha: 0.08),
+                        color: cardShadowColor,
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
@@ -252,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         backgroundColor: AppColor.secondary.withValues(
                           alpha: 0.12,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.dark_mode_outlined,
                           color: AppColor.secondary,
                         ),
@@ -265,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Text(
                               'Dark Mode',
                               style: TextStyle(
-                                color: AppColor.textPrimary,
+                                color: primaryText,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -274,20 +285,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Text(
                               'Atur tampilan mode gelap aplikasi',
                               style: TextStyle(
-                                color: AppColor.textSecondary,
+                                color: secondaryText,
                                 fontSize: 12,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Switch(
-                        value: _isDarkModePreview,
-                        activeColor: AppColor.primary,
-                        onChanged: (value) {
-                          setState(() {
-                            _isDarkModePreview = value;
-                          });
+                      ValueListenableBuilder<ThemeMode>(
+                        valueListenable: AppThemeController.themeMode,
+                        builder: (context, themeMode, _) {
+                          return Switch(
+                            value: themeMode == ThemeMode.dark,
+                            activeThumbColor: AppColor.primary,
+                            onChanged: (value) async {
+                              await AppThemeController.setDarkMode(value);
+                            },
+                          );
                         },
                       ),
                     ],
@@ -304,11 +318,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColor.surface,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
+                      boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
                         BoxShadow(
-                          color: AppColor.error.withValues(alpha: 0.08),
+                          color: (isDark ? Colors.black : AppColor.error)
+                              .withValues(alpha: isDark ? 0.28 : 0.08),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -321,7 +336,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundColor: AppColor.error.withValues(
                             alpha: 0.12,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.logout_rounded,
                             color: AppColor.error,
                           ),
@@ -334,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Logout',
                                 style: TextStyle(
-                                  color: AppColor.textPrimary,
+                                  color: primaryText,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -343,7 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 'Keluar aman dari sesi akun saat ini',
                                 style: TextStyle(
-                                  color: AppColor.textSecondary,
+                                  color: secondaryText,
                                   fontSize: 12,
                                 ),
                               ),
@@ -353,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
-                          color: AppColor.textSecondary,
+                          color: secondaryText,
                         ),
                       ],
                     ),
@@ -367,3 +382,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

@@ -234,19 +234,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColor.backgroundLight,
-        foregroundColor: AppColor.textPrimary,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Riwayat Kehadiran',
           style: TextStyle(
-            color: AppColor.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
@@ -261,7 +261,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
                     size: 48,
                     color: AppColor.error,
@@ -269,25 +269,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'Gagal memuat data',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColor.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _errorMessage!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColor.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _fetchAttendanceHistory,
-                    child: const Text('Coba Lagi'),
+                    child: Text('Coba Lagi'),
                   ),
                 ],
               ),
@@ -300,14 +300,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   Icon(
                     Icons.history,
                     size: 48,
-                    color: AppColor.textSecondary.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Tidak ada data riwayat kehadiran',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColor.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -340,9 +340,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColor.surface,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
+                      boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
                         BoxShadow(
                           color: entry.color.withValues(alpha: 0.05),
                           blurRadius: 12,
@@ -368,20 +368,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             children: [
                               Text(
                                 formattedDate,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColor.textPrimary,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   letterSpacing: 0.3,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 entry.detail,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColor.textSecondary,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -471,3 +471,9 @@ class _AttendanceHistoryEntry {
     }
   }
 }
+
+
+
+
+
+

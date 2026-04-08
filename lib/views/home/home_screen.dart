@@ -378,11 +378,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // Membangun tampilan halaman home.
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final strongAccent = colorScheme.primary;
+    final strongAccentOn = colorScheme.onPrimary;
+    final cardShadowColor = (isDarkMode ? Colors.black : AppColor.primary)
+        .withValues(alpha: isDarkMode ? 0.28 : 0.08);
+    final trainingScheduleBg = isDarkMode
+        ? colorScheme.primaryContainer.withValues(alpha: 0.32)
+        : AppColor.primary.withValues(alpha: 0.08);
+    final trainingScheduleIconBg = isDarkMode
+        ? colorScheme.primary.withValues(alpha: 0.24)
+        : AppColor.primary.withValues(alpha: 0.12);
+    final trainingScheduleLabelColor = isDarkMode
+        ? colorScheme.primary
+        : AppColor.primary.withValues(alpha: 0.9);
+
     return Scaffold(
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColor.backgroundLight,
-        foregroundColor: AppColor.textPrimary,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        foregroundColor: colorScheme.onSurface,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         elevation: 0,
@@ -396,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Text(
               'Presenzo',
               style: TextStyle(
-                color: AppColor.textPrimary,
+                color: colorScheme.onSurface,
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
               ),
@@ -422,9 +439,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   backgroundColor: AppColor.primary,
                   backgroundImage: avatarProvider,
                   child: avatarProvider == null
-                      ? const Icon(
+                      ? Icon(
                           Icons.person_rounded,
-                          color: AppColor.surface,
+                          color: strongAccentOn,
                           size: 20,
                         )
                       : null,
@@ -466,15 +483,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColor.surface.withValues(alpha: 0.18),
+                          color: strongAccentOn.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColor.surface.withValues(alpha: 0.2),
+                            color: strongAccentOn.withValues(alpha: 0.2),
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.school_rounded,
-                          color: AppColor.surface,
+                          color: strongAccentOn,
                           size: 30,
                         ),
                       ),
@@ -487,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               'Selamat datang',
                               style: TextStyle(
-                                color: AppColor.surface.withValues(alpha: 0.85),
+                                color: strongAccentOn.withValues(alpha: 0.85),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -498,8 +515,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               displayName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColor.surface,
+                              style: TextStyle(
+                                color: strongAccentOn,
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
@@ -519,15 +536,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColor.surface,
+                    color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColor.primary.withValues(alpha: 0.08),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    boxShadow: isDarkMode
+                        ? const []
+                        : [
+                            BoxShadow(
+                              color: cardShadowColor,
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -539,8 +558,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           'id_ID',
                         ).format(_currentDateTime),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColor.textSecondary,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -549,8 +568,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Text(
                         DateFormat('HH:mm').format(_currentDateTime),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColor.secondary,
+                        style: TextStyle(
+                          color: strongAccent,
                           fontSize: 48,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1,
@@ -603,18 +622,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           }
                                         : null,
                                     style: ElevatedButton.styleFrom(
-                                      elevation: isCheckInEnabled ? 8 : 0,
-                                      shadowColor: isCheckInEnabled
+                                      elevation:
+                                          (isCheckInEnabled && !isDarkMode)
+                                          ? 8
+                                          : 0,
+                                      shadowColor:
+                                          (isCheckInEnabled && !isDarkMode)
                                           ? const Color(0x4D1D4ED8)
                                           : Colors.transparent,
                                       backgroundColor: isCheckInEnabled
                                           ? AppColor.primary
-                                          : AppColor.textSecondary.withValues(
-                                              alpha: 0.3,
-                                            ),
+                                          : colorScheme.onSurfaceVariant
+                                                .withValues(alpha: 0.3),
                                       foregroundColor: isCheckInEnabled
-                                          ? AppColor.surface
-                                          : AppColor.surface.withValues(
+                                          ? strongAccentOn
+                                          : colorScheme.onSurface.withValues(
                                               alpha: 0.5,
                                             ),
                                       shape: RoundedRectangleBorder(
@@ -624,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                         horizontal: 12,
                                         vertical: 12,
                                       ),
-                                      textStyle: const TextStyle(
+                                      textStyle: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.5,
@@ -638,18 +660,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           Icons.fingerprint,
                                           size: 20,
                                           color: isCheckInEnabled
-                                              ? AppColor.surface
-                                              : AppColor.textPrimary.withValues(
-                                                  alpha: 0.4,
-                                                ),
+                                              ? strongAccentOn
+                                              : colorScheme.onSurface
+                                                    .withValues(alpha: 0.4),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
                                           'Absen Masuk',
                                           style: TextStyle(
                                             color: isCheckInEnabled
-                                                ? AppColor.surface
-                                                : AppColor.textPrimary
+                                                ? strongAccentOn
+                                                : colorScheme.onSurface
                                                       .withValues(alpha: 0.4),
                                             fontSize: 12,
                                           ),
@@ -681,18 +702,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           }
                                         : null,
                                     style: ElevatedButton.styleFrom(
-                                      elevation: isCheckOutEnabled ? 8 : 0,
-                                      shadowColor: isCheckOutEnabled
+                                      elevation:
+                                          (isCheckOutEnabled && !isDarkMode)
+                                          ? 8
+                                          : 0,
+                                      shadowColor:
+                                          (isCheckOutEnabled && !isDarkMode)
                                           ? const Color(0x4D1D4ED8)
                                           : Colors.transparent,
                                       backgroundColor: isCheckOutEnabled
                                           ? AppColor.primary
-                                          : AppColor.textSecondary.withValues(
-                                              alpha: 0.3,
-                                            ),
+                                          : colorScheme.onSurfaceVariant
+                                                .withValues(alpha: 0.3),
                                       foregroundColor: isCheckOutEnabled
-                                          ? AppColor.surface
-                                          : AppColor.surface.withValues(
+                                          ? strongAccentOn
+                                          : colorScheme.onSurface.withValues(
                                               alpha: 0.5,
                                             ),
                                       shape: RoundedRectangleBorder(
@@ -702,7 +726,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                         horizontal: 12,
                                         vertical: 12,
                                       ),
-                                      textStyle: const TextStyle(
+                                      textStyle: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.5,
@@ -716,18 +740,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           Icons.logout,
                                           size: 20,
                                           color: isCheckOutEnabled
-                                              ? AppColor.surface
-                                              : AppColor.textPrimary.withValues(
-                                                  alpha: 0.4,
-                                                ),
+                                              ? strongAccentOn
+                                              : colorScheme.onSurface
+                                                    .withValues(alpha: 0.4),
                                         ),
                                         const SizedBox(width: 10),
                                         Text(
                                           'Absen Pulang',
                                           style: TextStyle(
                                             color: isCheckOutEnabled
-                                                ? AppColor.surface
-                                                : AppColor.textPrimary
+                                                ? strongAccentOn
+                                                : colorScheme.onSurface
                                                       .withValues(alpha: 0.4),
                                             fontSize: 12,
                                           ),
@@ -752,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     vertical: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColor.primary.withValues(alpha: 0.08),
+                    color: trainingScheduleBg,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -761,12 +784,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: AppColor.primary.withValues(alpha: 0.12),
+                          color: trainingScheduleIconBg,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
                           Icons.access_time,
-                          color: AppColor.primary,
+                          color: strongAccent,
                           size: 26,
                         ),
                       ),
@@ -777,17 +800,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           Text(
                             'Jam Pelatihan',
                             style: TextStyle(
-                              color: AppColor.primary.withValues(alpha: 0.9),
+                              color: trainingScheduleLabelColor,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.4,
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
+                          Text(
                             '08:00 - 15:00',
                             style: TextStyle(
-                              color: AppColor.textPrimary,
+                              color: colorScheme.onSurface,
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
@@ -803,12 +826,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Statistik Absensi',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: AppColor.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -836,7 +859,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               vertical: 14,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColor.secondary,
+                              color: AppColor.primary,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Column(
@@ -847,7 +870,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColor.surface,
+                                    color: strongAccentOn,
                                     letterSpacing: 1.5,
                                   ),
                                   textAlign: TextAlign.center,
@@ -856,10 +879,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ),
                                 Text(
                                   stats.totalMasuk.toString(),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColor.surface,
+                                    color: strongAccentOn,
                                   ),
                                 ),
                               ],
@@ -885,7 +908,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColor.textPrimary,
+                                    color: colorScheme.onSurface,
                                     letterSpacing: 1.5,
                                   ),
                                   textAlign: TextAlign.center,
@@ -894,10 +917,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ),
                                 Text(
                                   stats.totalIzin.toString(),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColor.textPrimary,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
                               ],
@@ -914,13 +937,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Riwayat Kehadiran',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: AppColor.textPrimary,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -932,12 +955,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           );
                         },
-                        child: const Text(
+                        child: Text(
                           'Lihat Riwayat',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: AppColor.primary,
+                            color: isDarkMode
+                                ? AppColor.primarySoft
+                                : AppColor.primary,
                           ),
                         ),
                       ),
@@ -964,10 +989,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     if (historySnapshot.hasError) {
                       return Text(
                         historySnapshot.error.toString(),
-                        style: const TextStyle(
-                          color: AppColor.error,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: AppColor.error, fontSize: 12),
                       );
                     }
 
@@ -977,15 +999,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: AppColor.surface,
+                          color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.primary.withValues(alpha: 0.06),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                          boxShadow: isDarkMode
+                              ? const []
+                              : [
+                                  BoxShadow(
+                                    color: AppColor.primary.withValues(
+                                      alpha: 0.06,
+                                    ),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -994,14 +1020,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               width: 56,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: AppColor.textSecondary.withValues(
+                                color: colorScheme.onSurfaceVariant.withValues(
                                   alpha: 0.1,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
                                 Icons.event_note_outlined,
-                                color: AppColor.textSecondary.withValues(
+                                color: colorScheme.onSurfaceVariant.withValues(
                                   alpha: 0.5,
                                 ),
                                 size: 28,
@@ -1011,7 +1037,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               'Belum ada riwayat 5 hari terakhir',
                               style: TextStyle(
-                                color: AppColor.textSecondary.withValues(
+                                color: colorScheme.onSurfaceVariant.withValues(
                                   alpha: 0.7,
                                 ),
                                 fontSize: 13,
@@ -1053,17 +1079,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: AppColor.surface,
+                                    color: colorScheme.surface,
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: entry.color.withValues(
-                                          alpha: 0.05,
-                                        ),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
+                                    boxShadow: isDarkMode
+                                        ? const []
+                                        : [
+                                            BoxShadow(
+                                              color: entry.color.withValues(
+                                                alpha: 0.05,
+                                              ),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
                                   ),
                                   child: Row(
                                     children: [
@@ -1092,19 +1120,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                           children: [
                                             Text(
                                               formattedDate,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
-                                                color: AppColor.textPrimary,
+                                                color: colorScheme.onSurface,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
                                               entry.detail,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
-                                                color: AppColor.textSecondary,
+                                                color: colorScheme
+                                                    .onSurfaceVariant,
                                               ),
                                             ),
                                           ],
@@ -1151,7 +1180,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   const SizedBox(height: 8),
                   Text(
                     snapshot.error.toString(),
-                    style: const TextStyle(color: AppColor.error, fontSize: 12),
+                    style: TextStyle(color: AppColor.error, fontSize: 12),
                   ),
                 ],
               ],

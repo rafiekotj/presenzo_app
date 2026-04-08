@@ -72,7 +72,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   Future<void> _showPhotoPickerSheet() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: AppColor.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -92,12 +92,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Ganti Foto Profil',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppColor.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -105,11 +105,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.photo_camera_outlined,
                     color: AppColor.primary,
                   ),
-                  title: const Text('Ambil dari Kamera'),
+                  title: Text('Ambil dari Kamera'),
                   onTap: () => Navigator.of(context).pop(ImageSource.camera),
                 ),
                 const SizedBox(height: 4),
@@ -117,11 +117,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.photo_library_outlined,
                     color: AppColor.primary,
                   ),
-                  title: const Text('Pilih dari Galeri'),
+                  title: Text('Pilih dari Galeri'),
                   onTap: () => Navigator.of(context).pop(ImageSource.gallery),
                 ),
               ],
@@ -287,20 +287,31 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryText = theme.colorScheme.onSurface;
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final disabledFieldOverlay = isDarkMode
+        ? Colors.white.withValues(alpha: 0.22) // Gray overlay untuk dark mode
+        : Colors.black.withValues(alpha: 0.1); // Black overlay untuk light mode
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColor.backgroundLight,
-        foregroundColor: AppColor.textPrimary,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: primaryText,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 56,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Edit Profil',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: primaryText,
+          ),
         ),
       ),
       body: FutureBuilder<void>(
@@ -322,7 +333,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     Text(
                       snapshot.error.toString(),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColor.error),
+                      style: TextStyle(color: AppColor.error),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
@@ -331,7 +342,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           _initialLoadFuture = _loadInitialData();
                         });
                       },
-                      child: const Text('Coba Lagi'),
+                      child: Text('Coba Lagi'),
                     ),
                   ],
                 ),
@@ -386,7 +397,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                                   AppColor.primarySoft,
                                               backgroundImage: avatarProvider,
                                               child: avatarProvider == null
-                                                  ? const Icon(
+                                                  ? Icon(
                                                       Icons.person,
                                                       size: 56,
                                                       color: AppColor.primary,
@@ -409,7 +420,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                               width: 32,
                                               height: 32,
                                               decoration: BoxDecoration(
-                                                color: AppColor.surface,
+                                                color:
+                                                    theme.colorScheme.surface,
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
                                                   color: AppColor.primarySoft,
@@ -427,7 +439,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                                                 .primary,
                                                           ),
                                                     )
-                                                  : const Icon(
+                                                  : Icon(
                                                       Icons.camera_alt_outlined,
                                                       color: AppColor.primary,
                                                       size: 16,
@@ -451,9 +463,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                         Positioned.fill(
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.1,
-                                              ),
+                                              color: disabledFieldOverlay,
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -487,9 +497,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                         Positioned.fill(
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.1,
-                                              ),
+                                              color: disabledFieldOverlay,
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -511,9 +519,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                         Positioned.fill(
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.1,
-                                              ),
+                                              color: disabledFieldOverlay,
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -535,9 +541,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                         Positioned.fill(
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.1,
-                                              ),
+                                              color: disabledFieldOverlay,
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),

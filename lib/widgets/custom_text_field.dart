@@ -93,23 +93,29 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceText = theme.colorScheme.onSurface;
+    final hintColor = isDark ? const Color(0xFF86AAA2) : AppColor.textHint;
+    final fillColor = isDark ? const Color(0xFF1A3A33) : AppColor.fieldFill;
+
     final floatLabel = _isFloating;
     final hasError = _errorText != null && _errorText!.isNotEmpty;
     final borderColor = hasError
         ? AppColor.error
         : _focusNode.hasFocus
         ? AppColor.secondary
-        : AppColor.textHint;
+        : hintColor;
     final labelColor = hasError
         ? AppColor.error
         : _focusNode.hasFocus
         ? AppColor.secondary
-        : AppColor.textHint;
+        : hintColor;
     final iconColor = hasError
         ? AppColor.error
         : _focusNode.hasFocus
         ? AppColor.primary
-        : AppColor.textHint;
+        : hintColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +127,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: AppColor.fieldFill,
+              color: fillColor,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: borderColor, width: 1),
             ),
@@ -180,7 +186,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                           child: TextFormField(
                             focusNode: _focusNode,
                             controller: widget.controller,
-                            cursorColor: AppColor.textHint,
+                            cursorColor: hintColor,
                             cursorHeight: 20,
                             obscureText: widget.obscureText,
                             obscuringCharacter: '•',
@@ -198,8 +204,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                               height: 1.2,
                               forceStrutHeight: true,
                             ),
-                            style: const TextStyle(
-                              color: AppColor.textPrimary,
+                            style: TextStyle(
+                              color: surfaceText,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               height: 1.2,
@@ -239,7 +245,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                       child: SizedBox(
                         height: 28,
                         child: IconTheme(
-                          data: const IconThemeData(color: AppColor.textHint),
+                          data: IconThemeData(color: hintColor),
                           child: Center(child: widget.suffixIcon!),
                         ),
                       ),

@@ -176,7 +176,7 @@ class _CustomDropdownFieldState<TValue>
     super.dispose();
   }
 
-  List<DropdownItem<TValue>> _convertToDropdownItems() {
+  List<DropdownItem<TValue>> _convertToDropdownItems(Color textColor) {
     if (widget.isLoading) {
       return <DropdownItem<TValue>>[];
     }
@@ -187,10 +187,10 @@ class _CustomDropdownFieldState<TValue>
             value: item.value,
             enabled: item.enabled,
             child: DefaultTextStyle.merge(
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColor.textPrimary,
+                color: textColor,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -204,13 +204,22 @@ class _CustomDropdownFieldState<TValue>
   // ==================== BUILD METHOD ====================
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceText = theme.colorScheme.onSurface;
+    final hintColor = isDark ? const Color(0xFF86AAA2) : AppColor.textHint;
+    final fillColor = isDark ? const Color(0xFF1A3A33) : AppColor.fieldFill;
+    final dropdownColor = widget.dropdownColor == AppColor.surface
+        ? theme.colorScheme.surface
+        : widget.dropdownColor;
+
     // ==================== SETUP VARIABLES ====================
     final hasError =
         _hasInteracted &&
         !widget.isLoading &&
         _errorText != null &&
         _errorText!.isNotEmpty;
-    final dropdownItems = _convertToDropdownItems();
+    final dropdownItems = _convertToDropdownItems(surfaceText);
     const horizontalFieldPadding = 12.0;
     const prefixIconSize = 20.0;
     const prefixGap = 12.0;
@@ -241,10 +250,10 @@ class _CustomDropdownFieldState<TValue>
                     ? AppColor.error
                     : _focusNode.hasFocus
                     ? AppColor.secondary
-                    : AppColor.textHint,
+                    : hintColor,
                 width: 1,
               ),
-              color: AppColor.fieldFill,
+              color: fillColor,
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -265,7 +274,7 @@ class _CustomDropdownFieldState<TValue>
                           ? AppColor.error
                           : _focusNode.hasFocus
                           ? AppColor.secondary
-                          : AppColor.textHint,
+                          : hintColor,
                       fontSize: isFloating ? 11 : 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -289,7 +298,7 @@ class _CustomDropdownFieldState<TValue>
                             ? AppColor.error
                             : _focusNode.hasFocus
                             ? AppColor.primary
-                            : AppColor.textHint,
+                            : hintColor,
                       ),
                     ),
                   ),
@@ -343,8 +352,8 @@ class _CustomDropdownFieldState<TValue>
                             maxHeight: widget.menuMaxHeight,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: widget.dropdownColor,
-                              boxShadow: [
+                              color: dropdownColor,
+                              boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
                                 BoxShadow(
                                   color: Colors.black.withAlpha(26),
                                   blurRadius: 8,
@@ -408,7 +417,7 @@ class _CustomDropdownFieldState<TValue>
                               ? AppColor.error
                               : _focusNode.hasFocus
                               ? AppColor.primary
-                              : AppColor.textHint,
+                              : hintColor,
                         ),
                       ),
                     ),
@@ -437,3 +446,4 @@ class _CustomDropdownFieldState<TValue>
     );
   }
 }
+

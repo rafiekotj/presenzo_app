@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:presenzo_app/core/constant/app_color.dart';
 import 'package:presenzo_app/core/extensions/navigator.dart';
 import 'package:presenzo_app/services/api/forgot_password.dart';
 import 'package:presenzo_app/views/auth/otp_screen.dart';
@@ -28,7 +27,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -58,19 +57,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Lupa kata sandi?',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColor.textPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
-                              const Text(
+                              Text(
                                 'Masukkan email akunmu untuk menerima kode OTP.',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColor.textSecondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(height: 12),

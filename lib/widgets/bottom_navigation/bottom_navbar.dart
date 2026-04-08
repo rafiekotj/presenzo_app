@@ -26,17 +26,22 @@ class _BottomNavbarState extends State<BottomNavbar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       body: _buildBody(),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: AppColor.shadowLight,
-              blurRadius: 6,
-              offset: const Offset(0, -2),
-            ),
-          ],
+          boxShadow: theme.brightness == Brightness.dark
+              ? const []
+              : [
+                  BoxShadow(
+                    color: AppColor.shadowLight,
+                    blurRadius: 6,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -58,9 +63,9 @@ class _BottomNavbarState extends State<BottomNavbar> {
             ),
           ],
           currentIndex: _selectedIndex,
-          selectedItemColor: AppColor.primary,
-          unselectedItemColor: AppColor.textHint,
-          backgroundColor: AppColor.surface,
+          selectedItemColor: colorScheme.primary,
+          unselectedItemColor: colorScheme.onSurfaceVariant,
+          backgroundColor: colorScheme.surface,
           selectedLabelStyle: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w400,

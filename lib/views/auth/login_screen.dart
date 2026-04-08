@@ -139,15 +139,15 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Menyusun tampilan halaman login beserta form, aksi masuk, dan navigasi terkait.
   Widget build(BuildContext context) {
     if (isCheckingSession) {
-      return const Scaffold(
-        backgroundColor: AppColor.backgroundLight,
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Center(child: CircularProgressIndicator(color: AppColor.primary)),
       );
     }
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: AppColor.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -177,12 +177,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Login',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColor.textPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -244,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         const ForgotPasswordScreen(),
                                       );
                                     },
-                                    child: const Text(
+                                    child: Text(
                                       'Lupa kata sandi?',
                                       style: TextStyle(
                                         color: AppColor.primary,
@@ -261,10 +263,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
+                              Text(
                                 'Belum punya akun? ',
                                 style: TextStyle(
-                                  color: AppColor.textSecondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),
@@ -272,7 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onTap: () {
                                   context.push(const RegisterScreen());
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Daftar',
                                   style: TextStyle(
                                     color: AppColor.primary,
