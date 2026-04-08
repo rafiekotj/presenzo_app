@@ -1,4 +1,4 @@
-package com.example.presenzo_app
+package com.ppkd.presenzo
 
 import io.flutter.embedding.android.FlutterActivity
 
