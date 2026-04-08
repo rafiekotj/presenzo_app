@@ -2,26 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 
-/// CustomDropdownField - Dropdown dengan floating label dan prefix icon
-/// Features:
-/// - Floating label yang animasi naik saat focus/ada pilihan
-/// - Icon prefix tetap stabil (tidak bergerak saat focus)
-/// - Dropdown menu dengan styling
-/// - Total height konsisten: 28px (padding top+bottom)
-/// - Dynamic menu width (sesuai field width)
 class CustomDropdownField<TValue> extends StatefulWidget {
-  // ==================== PROPERTIES ====================
-  final TValue? selectedValue; // nilai yang dipilih
-  final String hintText; // text untuk label & placeholder
-  final IconData prefixIcon; // icon di sebelah kiri
-  final List<DropdownMenuItem<TValue>> items; // list pilihan
-  final ValueChanged<TValue?>? onChanged; // callback saat pilihan berubah
-  final String? Function(TValue?)? validator; // validasi
-  final bool isRequired; // jika true, harus dipilih (otomatis validasi)
-  final bool isLoading; // loading state
-  final String loadingText; // text saat loading
-  final double menuMaxHeight; // max tinggi dropdown menu
-  final Color dropdownColor; // background color menu
+  final TValue? selectedValue;
+  final String hintText;
+  final IconData prefixIcon;
+  final List<DropdownMenuItem<TValue>> items;
+  final ValueChanged<TValue?>? onChanged;
+  final String? Function(TValue?)? validator;
+  final bool isRequired;
+  final bool isLoading;
+  final String loadingText;
+  final double menuMaxHeight;
+  final Color dropdownColor;
 
   const CustomDropdownField({
     super.key,
@@ -45,73 +37,70 @@ class CustomDropdownField<TValue> extends StatefulWidget {
 
 class _CustomDropdownFieldState<TValue>
     extends State<CustomDropdownField<TValue>> {
-  // ==================== STATE VARIABLES ====================
-  late final ValueNotifier<TValue?> _selectedValueNotifier; // reactive state
-  final GlobalKey _fieldContainerKey = GlobalKey(); // untuk mengukur width
-  final FocusNode _focusNode = FocusNode(); // track focus state
-  String? _errorText; // error message
-  double? _menuWidth; // dropdown menu width (same as field)
-  bool _hasInteracted = false; // track apakah user sudah interact
+  late final ValueNotifier<TValue?> _selectedValueNotifier;
+  final GlobalKey _fieldContainerKey = GlobalKey();
+  final FocusNode _focusNode = FocusNode();
+  String? _errorText;
+  double? _menuWidth;
+  bool _hasInteracted = false;
 
+  // Menyiapkan nilai awal, listener fokus, dan ukuran menu saat widget dibuat.
   @override
   void initState() {
     super.initState();
     _selectedValueNotifier = ValueNotifier<TValue?>(widget.selectedValue);
     _focusNode.addListener(_handleFocusChange);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateMenuWidth();
-    });
+    _scheduleMenuWidthUpdate();
   }
 
+  // Menangani perubahan fokus untuk mengatur interaksi dan validasi otomatis.
   void _handleFocusChange() {
-    if (mounted) {
-      setState(() {});
-      // Mark sebagai sudah interact saat focus
-      if (_focusNode.hasFocus && !_hasInteracted) {
-        _hasInteracted = true;
-      }
-      // Auto-validate saat focus hilang (hanya jika sudah interact)
-      if (!_focusNode.hasFocus &&
-          _hasInteracted &&
-          (widget.validator != null || widget.isRequired)) {
-        setState(() {
-          if (widget.validator != null) {
-            _errorText = widget.validator?.call(_selectedValueNotifier.value);
-          } else if (widget.isRequired &&
-              _selectedValueNotifier.value == null) {
-            _errorText = "Harus dipilih";
-          } else {
-            _errorText = null;
-          }
-        });
-      }
+    if (!mounted) return;
+
+    setState(() {});
+
+    if (_focusNode.hasFocus && !_hasInteracted) {
+      _hasInteracted = true;
+    }
+
+    if (!_focusNode.hasFocus && _hasInteracted) {
+      _applyValidation(_selectedValueNotifier.value, shouldValidate: true);
     }
   }
 
+  // Menyesuaikan state internal saat properti dari parent berubah.
   @override
   void didUpdateWidget(CustomDropdownField<TValue> oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (widget.selectedValue != oldWidget.selectedValue) {
       _selectedValueNotifier.value = widget.selectedValue;
     }
-    // Hapus error dan reset interaction flag saat loading selesai
+
     if (oldWidget.isLoading && !widget.isLoading) {
       setState(() {
         _errorText = null;
         _hasInteracted = false;
       });
     }
-    // Hapus error saat items berubah
+
     if (oldWidget.items.length != widget.items.length) {
       setState(() {
         _errorText = null;
       });
     }
+
+    _scheduleMenuWidthUpdate();
+  }
+
+  // Menjadwalkan pembaruan lebar menu setelah frame selesai dirender.
+  void _scheduleMenuWidthUpdate() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateMenuWidth();
     });
   }
 
+  // Menyamakan lebar menu dropdown dengan lebar field.
   void _updateMenuWidth() {
     final context = _fieldContainerKey.currentContext;
     if (context == null) {
@@ -133,41 +122,43 @@ class _CustomDropdownFieldState<TValue>
     });
   }
 
-  void _validateAndUpdate(TValue? value) {
-    // Update selected value, validasi, dan trigger callback
-    _selectedValueNotifier.value = value;
-    _hasInteracted = true; // Mark sebagai sudah interact
+  // Menjalankan validasi dengan validator custom atau aturan wajib isi.
+  String? _resolveValidationError(TValue? value) {
+    if (widget.validator != null) {
+      return widget.validator?.call(value);
+    }
+
+    if (widget.isRequired && value == null) {
+      return 'Harus dipilih';
+    }
+
+    return null;
+  }
+
+  // Menerapkan hasil validasi ke state error field.
+  void _applyValidation(TValue? value, {required bool shouldValidate}) {
     setState(() {
-      // Validasi dengan custom validator atau isRequired (hanya jika sudah interact)
-      if (_hasInteracted) {
-        if (widget.validator != null) {
-          _errorText = widget.validator?.call(value);
-        } else if (widget.isRequired && value == null) {
-          _errorText = "Harus dipilih";
-        } else {
-          _errorText = null;
-        }
-      }
+      _errorText = shouldValidate ? _resolveValidationError(value) : null;
     });
+  }
+
+  // Memperbarui nilai dropdown, validasi, lalu memanggil callback perubahan.
+  void _validateAndUpdate(TValue? value) {
+    _selectedValueNotifier.value = value;
+    _hasInteracted = true;
+    _applyValidation(value, shouldValidate: true);
     widget.onChanged?.call(value);
   }
 
-  /// Public method untuk validasi - bisa dipanggil dari parent widget
-  /// Gunakan saat form submission untuk validasi semua field
+  // Memvalidasi field secara manual, misalnya saat submit form.
   String? validate() {
-    _hasInteracted = true; // Mark sebagai sudah interact saat submit
-    String? error;
-    if (widget.validator != null) {
-      error = widget.validator?.call(_selectedValueNotifier.value);
-    } else if (widget.isRequired && _selectedValueNotifier.value == null) {
-      error = "Harus dipilih";
-    }
-    setState(() {
-      _errorText = error;
-    });
+    _hasInteracted = true;
+    final error = _resolveValidationError(_selectedValueNotifier.value);
+    _applyValidation(_selectedValueNotifier.value, shouldValidate: true);
     return error;
   }
 
+  // Membersihkan resource agar tidak terjadi memory leak.
   @override
   void dispose() {
     _selectedValueNotifier.dispose();
@@ -176,6 +167,7 @@ class _CustomDropdownFieldState<TValue>
     super.dispose();
   }
 
+  // Mengubah item bawaan Flutter menjadi format item dari dropdown_button2.
   List<DropdownItem<TValue>> _convertToDropdownItems(Color textColor) {
     if (widget.isLoading) {
       return <DropdownItem<TValue>>[];
@@ -201,7 +193,6 @@ class _CustomDropdownFieldState<TValue>
         .toList();
   }
 
-  // ==================== BUILD METHOD ====================
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -213,7 +204,6 @@ class _CustomDropdownFieldState<TValue>
         ? theme.colorScheme.surface
         : widget.dropdownColor;
 
-    // ==================== SETUP VARIABLES ====================
     final hasError =
         _hasInteracted &&
         !widget.isLoading &&
@@ -227,22 +217,19 @@ class _CustomDropdownFieldState<TValue>
     const dropdownXOffset =
         -(horizontalFieldPadding + prefixIconSize + prefixGap - 8.0);
 
-    // Cek apakah dropdown harus floating (focus atau ada value)
     final isFloating =
         _focusNode.hasFocus || _selectedValueNotifier.value != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ==================== GESTURE DETECTOR ====================
-        // Membuat seluruh area field bisa diklik untuk trigger dropdown
         GestureDetector(
           onTap: () {
             _focusNode.requestFocus();
             setState(() {});
           },
           child: Container(
-            key: _fieldContainerKey, // untuk mengukur width field
+            key: _fieldContainerKey,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
@@ -258,9 +245,6 @@ class _CustomDropdownFieldState<TValue>
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // ==================== FLOATING LABEL ====================
-                // Label yang animasi naik dari top:17 (unfocus) -> top:4 (focus)
-                // Juga berubah ukuran: 14 -> 11 dan warna berubah follow focus
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
@@ -281,9 +265,6 @@ class _CustomDropdownFieldState<TValue>
                     child: Text(widget.hintText),
                   ),
                 ),
-                // ==================== PREFIX ICON ====================
-                // Icon di sebelah kiri - FIXED position (tidak bergerak saat focus)
-                // top: 14 konsisten untuk centering icon vertikal
                 Positioned(
                   left: 12,
                   top: 0,
@@ -310,20 +291,9 @@ class _CustomDropdownFieldState<TValue>
                     top: isFloating ? 17 : 14,
                     bottom: isFloating ? 11 : 14,
                   ),
-                  // ==================== DROPDOWN BUTTON AREA ====================
-                  // Padding: 28px total height = top (17 or 14) + bottom (11 or 14)
-                  // - Saat focus: top:17 + bottom:11 = 28px
-                  // - Saat unfocus: top:14 + bottom:14 = 28px (konsisten!)
-                  // Left: 44px (untuk icon), Right: 12px
                   child: Row(
                     children: [
                       Expanded(
-                        // ==================== DROPDOWN BUTTON ====================
-                        // Custom dropdown dengan styling:
-                        // - height: 28 (disamakan dengan text field)
-                        // - underline: none (styling di outer container)
-                        // - menuMaxHeight: configurable (default 280)
-                        // - menu width: same as field width
                         child: DropdownButton2<TValue>(
                           focusNode: _focusNode,
                           isExpanded: true,
@@ -353,13 +323,17 @@ class _CustomDropdownFieldState<TValue>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               color: dropdownColor,
-                              boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(26),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                              boxShadow:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const []
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.black.withAlpha(26),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                             ),
                             offset: const Offset(
                               dropdownXOffset,
@@ -446,4 +420,3 @@ class _CustomDropdownFieldState<TValue>
     );
   }
 }
-

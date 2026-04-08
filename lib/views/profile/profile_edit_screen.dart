@@ -37,6 +37,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   bool _isPickingPhoto = false;
   bool _isSaving = false;
 
+  // Membersihkan semua controller saat widget ditutup.
   @override
   void dispose() {
     _nameController.dispose();
@@ -47,28 +48,97 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     super.dispose();
   }
 
+  // Menjalankan proses awal untuk memuat data profil.
   @override
   void initState() {
     super.initState();
     _initialLoadFuture = _loadInitialData();
   }
 
-  Future<void> _loadInitialData() async {
-    final profileResult = await getUser();
-    final user = profileResult?.data;
-    _userData = user;
+  // Mengubah kode gender dari API menjadi teks yang mudah dibaca.
+  String _genderLabel(String? code) {
+    if (code == 'L') return 'Laki-laki';
+    if (code == 'P') return 'Perempuan';
+    return '-';
+  }
 
-    _nameController.text = user?.name ?? '';
+  // Mengisi field form berdasarkan data user yang diterima.
+  void _fillFormFromUser(Data? user, {bool keepTypedName = false}) {
+    _nameController.text = keepTypedName
+        ? _nameController.text
+        : (user?.name ?? '');
     _emailController.text = user?.email ?? '';
-    _jenisKelaminController.text = user?.jenisKelamin == 'L'
-        ? 'Laki-laki'
-        : user?.jenisKelamin == 'P'
-        ? 'Perempuan'
-        : '-';
+    _jenisKelaminController.text = _genderLabel(user?.jenisKelamin);
     _batchController.text = user?.batch?.batchKe ?? '-';
     _trainingController.text = user?.training?.title ?? '-';
   }
 
+  // Menampilkan pesan ke pengguna menggunakan SnackBar.
+  void _showAppSnackBar(String message, {required Color backgroundColor}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(backgroundColor: backgroundColor, content: Text(message)),
+    );
+  }
+
+  // Merapikan teks error agar lebih singkat untuk ditampilkan.
+  String _readableError(Object error) {
+    return error.toString().replaceFirst('Exception: ', '');
+  }
+
+  // Mencoba decode string base64 ke bytes gambar.
+  Uint8List? _tryDecodeBase64Image(String value) {
+    try {
+      return base64Decode(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Membuat tampilan field read-only dengan overlay nonaktif.
+  Widget _buildReadOnlyField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData prefixIcon,
+    required Color disabledFieldOverlay,
+  }) {
+    return AbsorbPointer(
+      child: Stack(
+        children: [
+          CustomTextField(
+            controller: controller,
+            hintText: hintText,
+            prefixIcon: prefixIcon,
+            readOnly: true,
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: disabledFieldOverlay,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Mengambil data user terbaru dari API.
+  Future<Data?> _fetchUserData() async {
+    final profileResult = await getUser();
+    return profileResult?.data;
+  }
+
+  // Memuat data awal lalu mengisi form.
+  Future<void> _loadInitialData() async {
+    final user = await _fetchUserData();
+    _userData = user;
+
+    _fillFormFromUser(user);
+  }
+
+  // Menampilkan bottom sheet untuk memilih sumber foto.
   Future<void> _showPhotoPickerSheet() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -135,6 +205,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     await _pickProfileImage(source);
   }
 
+  // Memilih gambar profil dari kamera atau galeri.
   Future<void> _pickProfileImage(ImageSource source) async {
     if (_isPickingPhoto) return;
 
@@ -160,13 +231,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         _pendingPhotoBase64 = base64Encode(bytes);
       });
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColor.error,
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-        ),
-      );
+      _showAppSnackBar(_readableError(error), backgroundColor: AppColor.error);
     } finally {
       if (mounted) {
         setState(() {
@@ -176,6 +241,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     }
   }
 
+  // Menentukan sumber gambar avatar yang akan ditampilkan.
   ImageProvider? _buildAvatarProvider() {
     if (_pendingPhotoBytes != null) {
       return MemoryImage(_pendingPhotoBytes!);
@@ -191,24 +257,19 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     if (rawPhoto.startsWith('data:image')) {
       final commaIndex = rawPhoto.indexOf(',');
       if (commaIndex > -1 && commaIndex + 1 < rawPhoto.length) {
-        try {
-          final rawBase64 = rawPhoto.substring(commaIndex + 1);
-          final bytes = base64Decode(rawBase64);
-          return MemoryImage(bytes);
-        } catch (_) {
-          return null;
-        }
+        final rawBase64 = rawPhoto.substring(commaIndex + 1);
+        final bytes = _tryDecodeBase64Image(rawBase64);
+        if (bytes != null) return MemoryImage(bytes);
       }
     }
 
-    try {
-      final bytes = base64Decode(rawPhoto);
-      return MemoryImage(bytes);
-    } catch (_) {
-      return null;
-    }
+    final bytes = _tryDecodeBase64Image(rawPhoto);
+    if (bytes != null) return MemoryImage(bytes);
+
+    return null;
   }
 
+  // Menyimpan perubahan profil dan memuat ulang data user.
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -216,11 +277,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColor.error,
-          content: Text('Nama tidak boleh kosong.'),
-        ),
+      _showAppSnackBar(
+        'Nama tidak boleh kosong.',
+        backgroundColor: AppColor.error,
       );
       return;
     }
@@ -237,45 +296,27 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
       await updateProfile(name: name);
 
-      final refreshed = await getUser();
-      final user = refreshed?.data;
+      final user = await _fetchUserData();
 
       if (!mounted) return;
       setState(() {
         _userData = user;
-        _nameController.text = user?.name ?? _nameController.text;
-        _emailController.text = user?.email ?? _emailController.text;
-        _jenisKelaminController.text = user?.jenisKelamin == 'L'
-            ? 'Laki-laki'
-            : user?.jenisKelamin == 'P'
-            ? 'Perempuan'
-            : '-';
-        _batchController.text = user?.batch?.batchKe ?? '-';
-        _trainingController.text = user?.training?.title ?? '-';
+        _fillFormFromUser(user, keepTypedName: true);
 
         _pendingPhotoBytes = null;
         _pendingPhotoBase64 = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColor.success,
-          content: Text('Profil berhasil diperbarui.'),
-        ),
+      _showAppSnackBar(
+        'Profil berhasil diperbarui.',
+        backgroundColor: AppColor.success,
       );
 
-      // Pop with true to indicate successful update
       if (mounted) {
         Navigator.of(context).pop(true);
       }
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColor.error,
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-        ),
-      );
+      _showAppSnackBar(_readableError(error), backgroundColor: AppColor.error);
     } finally {
       if (mounted) {
         setState(() {
@@ -291,8 +332,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     final primaryText = theme.colorScheme.onSurface;
     final isDarkMode = theme.brightness == Brightness.dark;
     final disabledFieldOverlay = isDarkMode
-        ? Colors.white.withValues(alpha: 0.22) // Gray overlay untuk dark mode
-        : Colors.black.withValues(alpha: 0.1); // Black overlay untuk light mode
+        ? Colors.white.withValues(alpha: 0.22)
+        : Colors.black.withValues(alpha: 0.1);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -451,26 +492,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 40),
-                                  AbsorbPointer(
-                                    child: Stack(
-                                      children: [
-                                        CustomTextField(
-                                          controller: _emailController,
-                                          hintText: 'Email',
-                                          prefixIcon: Icons.email_outlined,
-                                          readOnly: true,
-                                        ),
-                                        Positioned.fill(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: disabledFieldOverlay,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildReadOnlyField(
+                                    controller: _emailController,
+                                    hintText: 'Email',
+                                    prefixIcon: Icons.email_outlined,
+                                    disabledFieldOverlay: disabledFieldOverlay,
                                   ),
                                   const SizedBox(height: 10),
                                   CustomTextField(
@@ -485,70 +511,25 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                     },
                                   ),
                                   const SizedBox(height: 10),
-                                  AbsorbPointer(
-                                    child: Stack(
-                                      children: [
-                                        CustomTextField(
-                                          controller: _jenisKelaminController,
-                                          hintText: 'Jenis Kelamin',
-                                          prefixIcon: Icons.wc_outlined,
-                                          readOnly: true,
-                                        ),
-                                        Positioned.fill(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: disabledFieldOverlay,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildReadOnlyField(
+                                    controller: _jenisKelaminController,
+                                    hintText: 'Jenis Kelamin',
+                                    prefixIcon: Icons.wc_outlined,
+                                    disabledFieldOverlay: disabledFieldOverlay,
                                   ),
                                   const SizedBox(height: 10),
-                                  AbsorbPointer(
-                                    child: Stack(
-                                      children: [
-                                        CustomTextField(
-                                          controller: _batchController,
-                                          hintText: 'Batch',
-                                          prefixIcon: Icons.groups_outlined,
-                                          readOnly: true,
-                                        ),
-                                        Positioned.fill(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: disabledFieldOverlay,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildReadOnlyField(
+                                    controller: _batchController,
+                                    hintText: 'Batch',
+                                    prefixIcon: Icons.groups_outlined,
+                                    disabledFieldOverlay: disabledFieldOverlay,
                                   ),
                                   const SizedBox(height: 10),
-                                  AbsorbPointer(
-                                    child: Stack(
-                                      children: [
-                                        CustomTextField(
-                                          controller: _trainingController,
-                                          hintText: 'Training',
-                                          prefixIcon: Icons.school_outlined,
-                                          readOnly: true,
-                                        ),
-                                        Positioned.fill(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: disabledFieldOverlay,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildReadOnlyField(
+                                    controller: _trainingController,
+                                    hintText: 'Training',
+                                    prefixIcon: Icons.school_outlined,
+                                    disabledFieldOverlay: disabledFieldOverlay,
                                   ),
                                   const SizedBox(height: 20),
                                   CustomButton(

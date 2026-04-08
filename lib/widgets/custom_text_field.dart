@@ -1,26 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
 
-/// CustomTextField - Text input dengan floating label dan prefix/suffix icon
-/// Features:
-/// - Floating label yang animasi naik saat focus/ada text
-/// - Icon prefix tetap stabil (tidak bergerak saat focus)
-/// - Icon suffix (opsional)
-/// - Cursor lebih tinggi dan visible
-/// - Total height konsisten: 28px (padding top+bottom)
 class CustomTextField extends StatefulWidget {
-  // ==================== PROPERTIES ====================
   final TextEditingController? controller;
-  final String hintText; // text untuk label & placeholder
-  final IconData? prefixIcon; // icon di sebelah kiri
-  final Widget? suffixIcon; // icon di sebelah kanan
-  final bool obscureText; // untuk password field
+  final String hintText;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
+  final bool obscureText;
   final bool readOnly;
   final TextInputType? keyboardType;
   final bool? enableSuggestions;
   final bool? autocorrect;
   final String? Function(String?)? validator;
-  final EdgeInsets? errorPadding; // Custom padding untuk error text
+  final EdgeInsets? errorPadding;
 
   const CustomTextField({
     super.key,
@@ -45,15 +37,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
   final FocusNode _focusNode = FocusNode();
   String? _errorText;
 
-  // ==================== FLOATING LABEL LOGIC ====================
-  /// Cek apakah label harus float ke atas
-  /// Kondisi: saat focus ATAU ada text yang diinput
+  // Menentukan apakah label harus berada pada posisi floating.
   bool get _isFloating {
     final text = widget.controller?.text.trim() ?? '';
     return _focusNode.hasFocus || text.isNotEmpty;
   }
 
-  // ==================== LIFECYCLE METHODS ====================
+  // Menyiapkan listener focus dan listener perubahan teks saat widget dibuat.
   @override
   void initState() {
     super.initState();
@@ -61,6 +51,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     widget.controller?.addListener(_handleTextChange);
   }
 
+  // Menukar listener ketika instance controller dari parent berubah.
   @override
   void didUpdateWidget(CustomTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -70,18 +61,65 @@ class _CustomTextFieldState extends State<CustomTextField> {
     }
   }
 
-  void _handleFocusChange() {
-    // Trigger rebuild saat focus berubah (untuk animasi label)
+  // Merender ulang UI jika widget masih aktif.
+  void _refreshUI() {
+    if (!mounted) return;
     setState(() {});
   }
 
-  void _handleTextChange() {
-    // Trigger rebuild saat text berubah (untuk floating label logic)
-    if (mounted) {
-      setState(() {});
-    }
+  // Menangani perubahan fokus untuk menggerakkan animasi label.
+  void _handleFocusChange() {
+    _refreshUI();
   }
 
+  // Menangani perubahan teks agar status floating label selalu akurat.
+  void _handleTextChange() {
+    _refreshUI();
+  }
+
+  // Menentukan warna border, label, dan ikon berdasarkan state field.
+  Color _stateColor({
+    required bool hasError,
+    required Color focusColor,
+    required Color normalColor,
+  }) {
+    if (hasError) return AppColor.error;
+    if (_focusNode.hasFocus) return focusColor;
+    return normalColor;
+  }
+
+  // Menentukan posisi horizontal label dan area input.
+  double _contentLeftPadding() {
+    return widget.prefixIcon != null ? 44 : 12;
+  }
+
+  // Menentukan posisi horizontal suffix icon.
+  double _contentRightPadding() {
+    return widget.suffixIcon != null ? 44 : 12;
+  }
+
+  // Menentukan padding input sesuai kondisi label floating.
+  EdgeInsets _inputPadding(bool floatLabel) {
+    return EdgeInsets.only(
+      left: _contentLeftPadding(),
+      right: _contentRightPadding(),
+      top: floatLabel ? 17 : 14,
+      bottom: floatLabel ? 11 : 14,
+    );
+  }
+
+  // Menjalankan validator eksternal dan menyimpan hasil error ke state.
+  String? _runValidation(String? value) {
+    final error = widget.validator?.call(value);
+    if (mounted) {
+      setState(() {
+        _errorText = error;
+      });
+    }
+    return error;
+  }
+
+  // Membersihkan listener dan focus node saat widget dibuang.
   @override
   void dispose() {
     widget.controller?.removeListener(_handleTextChange);
@@ -101,21 +139,21 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
     final floatLabel = _isFloating;
     final hasError = _errorText != null && _errorText!.isNotEmpty;
-    final borderColor = hasError
-        ? AppColor.error
-        : _focusNode.hasFocus
-        ? AppColor.secondary
-        : hintColor;
-    final labelColor = hasError
-        ? AppColor.error
-        : _focusNode.hasFocus
-        ? AppColor.secondary
-        : hintColor;
-    final iconColor = hasError
-        ? AppColor.error
-        : _focusNode.hasFocus
-        ? AppColor.primary
-        : hintColor;
+    final borderColor = _stateColor(
+      hasError: hasError,
+      focusColor: AppColor.secondary,
+      normalColor: hintColor,
+    );
+    final labelColor = _stateColor(
+      hasError: hasError,
+      focusColor: AppColor.secondary,
+      normalColor: hintColor,
+    );
+    final iconColor = _stateColor(
+      hasError: hasError,
+      focusColor: AppColor.primary,
+      normalColor: hintColor,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,11 +172,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // ==================== FLOATING LABEL ====================
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  left: widget.prefixIcon != null ? 44 : 12,
+                  left: _contentLeftPadding(),
                   top: floatLabel ? 10 : 20,
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 180),
@@ -151,7 +188,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     child: Text(widget.hintText),
                   ),
                 ),
-                // ==================== PREFIX ICON ====================
                 if (widget.prefixIcon != null)
                   Positioned(
                     left: 12,
@@ -170,14 +206,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                       ),
                     ),
                   ),
-                // ==================== INPUT AREA ====================
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: widget.prefixIcon != null ? 44 : 12,
-                    right: widget.suffixIcon != null ? 44 : 12,
-                    top: floatLabel ? 17 : 14,
-                    bottom: floatLabel ? 11 : 14,
-                  ),
+                  padding: _inputPadding(floatLabel),
                   child: Row(
                     children: [
                       Expanded(
@@ -221,13 +251,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                               counterText: '',
                             ),
                             validator: (value) {
-                              final error = widget.validator?.call(value);
-                              if (mounted) {
-                                setState(() {
-                                  _errorText = error;
-                                });
-                              }
-                              return null; // return null agar error tidak ditampilkan TextFormField
+                              _runValidation(value);
+                              return null;
                             },
                           ),
                         ),
@@ -235,7 +260,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     ],
                   ),
                 ),
-                // ==================== SUFFIX ICON ====================
                 if (widget.suffixIcon != null)
                   Positioned(
                     right: 12,
@@ -255,10 +279,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
           ),
         ),
-        // ==================== ERROR TEXT (BAWAH FIELD) ====================
         if (_errorText != null && _errorText!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 6, left: 4),
+            padding:
+                widget.errorPadding ?? const EdgeInsets.only(top: 6, left: 4),
             child: Text(
               _errorText!,
               style: const TextStyle(

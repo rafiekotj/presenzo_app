@@ -22,13 +22,13 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
   bool _isDeleting = false;
 
   @override
-  /// Menjalankan inisialisasi data peta saat layar detail dibuka.
+  // Menjalankan inisialisasi data peta saat layar detail dibuka.
   void initState() {
     super.initState();
     _prepareMapData();
   }
 
-  /// Menyiapkan marker check-in/check-out dan menghitung batas area kamera peta.
+  // Menyiapkan marker check-in/check-out dan menghitung batas area kamera peta.
   void _prepareMapData() {
     _markers = {};
 
@@ -102,7 +102,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
     }
   }
 
-  /// Menangani konfirmasi dan proses hapus data absensi, lalu memicu refresh data home.
+  // Menangani konfirmasi dan proses hapus data absensi, lalu memicu refresh data home.
   Future<void> _handleDeleteAttendance() async {
     if (_isDeleting || widget.record.id == null) return;
 
@@ -157,7 +157,7 @@ class _AttendanceDetailScreenState extends State<AttendanceDetailScreen> {
   }
 
   @override
-  /// Menyusun seluruh tampilan detail kehadiran berdasarkan data absensi yang dipilih.
+  // Menyusun seluruh tampilan detail kehadiran berdasarkan data absensi yang dipilih.
   Widget build(BuildContext context) {
     final status = (widget.record.status ?? '').toLowerCase();
     final statusColor = switch (status) {

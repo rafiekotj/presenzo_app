@@ -18,7 +18,6 @@ class _BottomNavbarState extends State<BottomNavbar> {
     setState(() {
       _selectedIndex = index;
     });
-    // Refresh HomeScreen data ketika tab Home dipilih
     if (index == 0) {
       HomeScreen.refresh();
     }

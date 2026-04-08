@@ -54,7 +54,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   AttendanceMode _selectedMode = AttendanceMode.hadir;
 
   @override
-  /// Menyiapkan jam berjalan dan memulai pemuatan data awal saat layar dibuka.
+  // Menyiapkan jam berjalan dan memulai pemuatan data awal saat layar dibuka.
   void initState() {
     super.initState();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -63,14 +63,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     _loadInitialData();
   }
 
-  /// Mengambil token aktif untuk kebutuhan debugging saat layar dibuka.
+  // Mengambil token aktif untuk kebutuhan debugging saat layar dibuka.
   Future<void> _logActiveToken() async {
     final token = await PreferenceHandler.getToken();
     log('active_user_token=$token');
   }
 
   @override
-  /// Membersihkan controller, timer, dan map controller saat layar ditutup.
+  // Membersihkan controller, timer, dan map controller saat layar ditutup.
   void dispose() {
     _reasonController.dispose();
     _mapController?.dispose();
@@ -79,7 +79,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     super.dispose();
   }
 
-  /// Menjalankan alur awal halaman: token, lokasi, dan status presensi hari ini.
+  // Menjalankan alur awal halaman: token, lokasi, dan status presensi hari ini.
   Future<void> _loadInitialData() async {
     setState(() {
       _isLoading = true;
@@ -97,7 +97,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     unawaited(_fetchCurrentLocation());
   }
 
-  /// Mengambil data presensi hari ini lalu menerapkan semua flag status ke state.
+  // Mengambil data presensi hari ini lalu menerapkan semua flag status ke state.
   Future<void> _fetchTodayAttendance() async {
     final attendanceDate = _dateFormat.format(DateTime.now());
     AttendanceRecord? todayAttendance;
@@ -115,7 +115,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     unawaited(_tryAutoCheckoutIfNeeded());
   }
 
-  /// Menurunkan seluruh kondisi UI dari data presensi hari ini agar alurnya satu pintu.
+  // Menurunkan seluruh kondisi UI dari data presensi hari ini agar alurnya satu pintu.
   void _applyAttendanceFlags(AttendanceRecord? todayAttendance) {
     if (!mounted) return;
 
@@ -138,7 +138,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     });
   }
 
-  /// Mengambil lokasi pengguna, mengubahnya menjadi alamat, lalu memusatkan peta.
+  // Mengambil lokasi pengguna, mengubahnya menjadi alamat, lalu memusatkan peta.
   Future<void> _fetchCurrentLocation() async {
     if (mounted) {
       setState(() {
@@ -222,7 +222,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
-  /// Menggeser kamera map ke posisi terbaru pengguna jika map sudah siap.
+  // Menggeser kamera map ke posisi terbaru pengguna jika map sudah siap.
   Future<void> _focusMapToPosition(Position position) async {
     final controller = _mapController;
     if (controller == null) return;
@@ -242,7 +242,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
-  /// Menghitung jarak pengguna (meter) ke titik check in yang ditentukan.
+  // Menghitung jarak pengguna (meter) ke titik check in yang ditentukan.
   double _distanceToCheckInTargetMeters(Position position) {
     return Geolocator.distanceBetween(
       position.latitude,
@@ -302,7 +302,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
-  /// Memvalidasi kondisi presensi lalu mengirim request check in, check out, atau izin.
+  // Memvalidasi kondisi presensi lalu mengirim request check in, check out, atau izin.
   Future<void> _submitAttendance() async {
     if (_isSubmitting) return;
 
@@ -425,7 +425,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
-  /// Menampilkan error dengan format pesan yang konsisten untuk semua proses async.
+  // Menampilkan error dengan format pesan yang konsisten untuk semua proses async.
   void _showErrorMessage(Object error) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -434,7 +434,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   @override
-  /// Menyusun seluruh tampilan halaman presensi berdasarkan state saat ini.
+  // Menyusun seluruh tampilan halaman presensi berdasarkan state saat ini.
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

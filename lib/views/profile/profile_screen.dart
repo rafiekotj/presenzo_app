@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:presenzo_app/core/constant/app_color.dart';
@@ -20,18 +21,35 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<GetUserModel?> _profileFuture;
 
+  // Mengambil data profil user dari API.
+  Future<GetUserModel?> _fetchProfile() {
+    return getUser();
+  }
+
+  // Menjalankan pemuatan data awal saat halaman pertama dibuka.
   @override
   void initState() {
     super.initState();
-    _profileFuture = getUser();
+    _profileFuture = _fetchProfile();
   }
 
+  // Memuat ulang data profil, biasanya setelah ada perubahan data.
   void _refreshProfile() {
     setState(() {
-      _profileFuture = getUser();
+      _profileFuture = _fetchProfile();
     });
   }
 
+  // Mencoba mengubah teks base64 menjadi bytes gambar.
+  Uint8List? _tryDecodeBase64Image(String value) {
+    try {
+      return base64Decode(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Menentukan sumber gambar avatar berdasarkan format foto yang diterima.
   ImageProvider? _buildAvatarProvider(String? photoUrl) {
     final rawPhoto = (photoUrl ?? '').trim();
     if (rawPhoto.isEmpty) return null;
@@ -43,22 +61,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (rawPhoto.startsWith('data:image')) {
       final commaIndex = rawPhoto.indexOf(',');
       if (commaIndex > -1 && commaIndex + 1 < rawPhoto.length) {
-        try {
-          final rawBase64 = rawPhoto.substring(commaIndex + 1);
-          final bytes = base64Decode(rawBase64);
-          return MemoryImage(bytes);
-        } catch (_) {
-          return null;
-        }
+        final rawBase64 = rawPhoto.substring(commaIndex + 1);
+        final bytes = _tryDecodeBase64Image(rawBase64);
+        if (bytes != null) return MemoryImage(bytes);
       }
     }
 
-    try {
-      final bytes = base64Decode(rawPhoto);
-      return MemoryImage(bytes);
-    } catch (_) {
-      return null;
-    }
+    final bytes = _tryDecodeBase64Image(rawPhoto);
+    if (bytes != null) return MemoryImage(bytes);
+
+    return null;
   }
 
   @override
@@ -189,13 +201,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
-                        BoxShadow(
-                          color: cardShadowColor,
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                      boxShadow: Theme.of(context).brightness == Brightness.dark
+                          ? const []
+                          : [
+                              BoxShadow(
+                                color: cardShadowColor,
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                     ),
                     child: Row(
                       children: [
@@ -248,13 +262,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
-                      BoxShadow(
-                        color: cardShadowColor,
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                    boxShadow: Theme.of(context).brightness == Brightness.dark
+                        ? const []
+                        : [
+                            BoxShadow(
+                              color: cardShadowColor,
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                   ),
                   child: Row(
                     children: [
@@ -320,14 +336,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: Theme.of(context).brightness == Brightness.dark ? const [] : [
-                        BoxShadow(
-                          color: (isDark ? Colors.black : AppColor.error)
-                              .withValues(alpha: isDark ? 0.28 : 0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                      boxShadow: Theme.of(context).brightness == Brightness.dark
+                          ? const []
+                          : [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : AppColor.error)
+                                    .withValues(alpha: isDark ? 0.28 : 0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                     ),
                     child: Row(
                       children: [
@@ -382,4 +400,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
