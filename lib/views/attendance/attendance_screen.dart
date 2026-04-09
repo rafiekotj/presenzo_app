@@ -23,7 +23,7 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   static const double _checkInTargetLat = -6.2110317;
   static const double _checkInTargetLng = 106.8126051;
-  static const double _maxCheckInDistanceMeters = 50;
+  static const double _maxCheckInDistanceMeters = 60;
   static const int _checkInStartHour = 5;
   static const int _checkOutStartHour = 15;
   static const int _autoCheckOutHour = 17;
@@ -47,7 +47,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   bool _isLoading = true;
   bool _isMapReady = false;
-  bool _isLocationLoading = false;
   bool _isSubmitting = false;
   bool _isAutoCheckoutRunning = false;
 
@@ -140,12 +139,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   // Mengambil lokasi pengguna, mengubahnya menjadi alamat, lalu memusatkan peta.
   Future<void> _fetchCurrentLocation() async {
-    if (mounted) {
-      setState(() {
-        _isLocationLoading = true;
-      });
-    }
-
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -162,20 +155,29 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         throw Exception('Izin lokasi ditolak.');
       }
 
+      final lastKnownPosition = await Geolocator.getLastKnownPosition();
+      if (lastKnownPosition != null && mounted) {
+        setState(() {
+          _currentPosition = lastKnownPosition;
+          _currentAddress =
+              'Lat ${lastKnownPosition.latitude.toStringAsFixed(6)}, Lng ${lastKnownPosition.longitude.toStringAsFixed(6)}';
+        });
+        await _focusMapToPosition(lastKnownPosition);
+        unawaited(_resolveAddress(lastKnownPosition));
+      }
+
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 5),
         ),
-        timeLimit: const Duration(seconds: 5),
       );
-
-      String address =
-          'Lat ${position.latitude.toStringAsFixed(6)}, Lng ${position.longitude.toStringAsFixed(6)}';
 
       if (!mounted) return;
       setState(() {
         _currentPosition = position;
-        _currentAddress = address;
+        _currentAddress =
+            'Lat ${position.latitude.toStringAsFixed(6)}, Lng ${position.longitude.toStringAsFixed(6)}';
       });
 
       await _focusMapToPosition(position);
@@ -183,11 +185,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     } catch (error) {
       _showErrorMessage(error);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLocationLoading = false;
-        });
-      }
       unawaited(_tryAutoCheckoutIfNeeded());
     }
   }
@@ -321,10 +318,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       return;
     }
 
-    // Validasi radius untuk absen masuk dan absen keluar.
+    // Validasi radius hanya untuk hadir/check-out; izin tidak dibatasi radius.
     final isCheckInFlow =
         !_canCheckoutToday && _selectedMode == AttendanceMode.hadir;
     final isCheckOutFlow = _canCheckoutToday;
+    final shouldValidateDistance =
+        _selectedMode != AttendanceMode.izin &&
+        (isCheckInFlow || isCheckOutFlow);
 
     if (isCheckInFlow && !_isAtOrAfterHour(_checkInStartHour)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -344,7 +344,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       return;
     }
 
-    if (isCheckInFlow || isCheckOutFlow) {
+    if (shouldValidateDistance) {
       final position = _currentPosition;
       if (position == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -489,7 +489,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final currentLatLng = _currentPosition == null
         ? const LatLng(-6.200000, 106.816666)
         : LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
-    final isMapSectionLoading = !_isMapReady || _isLocationLoading;
+    final isMapSectionLoading = !_isMapReady;
     final isBeforeCheckInTime = !_isAtOrAfterHour(_checkInStartHour);
     final isBeforeCheckOutTime = !_isAtOrAfterHour(_checkOutStartHour);
     final isCheckInFlow =
